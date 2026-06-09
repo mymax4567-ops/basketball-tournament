@@ -33,7 +33,22 @@ header h1 span{color:var(--orange);}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;}
 .card-title{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--orange);margin-bottom:14px;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
 .card-title::after{content:'';flex:1;height:1px;background:var(--border);}
-.bracket-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.bracket-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
+.bk-container{display:flex;align-items:center;gap:0;min-width:max-content;padding:16px 8px;}
+.bk-round{display:flex;flex-direction:column;position:relative;}
+.bk-round-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--orange);text-transform:uppercase;text-align:center;margin-bottom:10px;padding:0 12px;}
+.bk-match-wrap{display:flex;flex-direction:column;justify-content:center;position:relative;}
+.bk-match{background:var(--dark3);border:1px solid var(--border);border-radius:8px;width:130px;margin:0 8px;overflow:hidden;}
+.bk-team{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);}
+.bk-team:last-child{border-bottom:none;}
+.bk-team.winner{background:rgba(255,107,0,0.15);color:var(--orange);}
+.bk-team.tbd{color:var(--muted);font-style:italic;font-size:11px;}
+.bk-score{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--orange);}
+.bk-connector{display:flex;flex-direction:column;justify-content:center;width:20px;flex-shrink:0;}
+.bk-champ{background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,107,0,0.1));border:2px solid var(--gold);border-radius:10px;padding:14px 12px;text-align:center;min-width:100px;margin-left:8px;}
+.bk-champ-crown{font-size:24px;}
+.bk-champ-label{font-size:8px;letter-spacing:2px;color:var(--gold);font-weight:700;margin:3px 0;}
+.bk-champ-name{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold);}
 .bracket{display:flex;gap:0;min-width:500px;padding:10px 0;align-items:center;}
 .round{display:flex;flex-direction:column;}
 .round-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--orange);text-transform:uppercase;text-align:center;margin-bottom:12px;padding:0 8px;}
@@ -205,22 +220,64 @@ function renderBracket(b){
   if(matches.length===0){
     el.innerHTML='<div class="loading">尚未設定對戰資料</div>';
   } else {
-    el.innerHTML=`<div style="display:flex;flex-direction:column;gap:16px;width:100%">
-      ${matches.map(m=>`
-        <div style="background:var(--dark3);border:1px solid var(--border);border-radius:10px;padding:14px;">
-          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--orange);margin-bottom:10px;text-transform:uppercase">${m.name||''}</div>
-          <div style="display:flex;flex-direction:column;gap:4px;">
-            ${simpleSlot(m.teamA,m.emojiA,m.scoreA,m.winner===0)}
-            <div style="text-align:center;font-size:10px;color:var(--muted);padding:2px 0">VS</div>
-            ${simpleSlot(m.teamB,m.emojiB,m.scoreB,m.winner===1)}
+    // Group matches by round
+    const rounds={};
+    matches.forEach(m=>{
+      const r=m.round||1;
+      if(!rounds[r])rounds[r]=[];
+      rounds[r].push(m);
+    });
+    const roundNums=Object.keys(rounds).map(Number).sort((a,b)=>a-b);
+    const roundNames={};
+    matches.forEach(m=>{if(m.name&&m.round)roundNames[m.round]=roundNames[m.round]||m.name;});
+
+    let html='<div class="bk-container">';
+    roundNums.forEach((rn,ri)=>{
+      const rMatches=rounds[rn];
+      const rLabel=rn===Math.max(...roundNums)?'決賽':rn===1?'第一輪':'第'+rn+'輪';
+      html+=`<div class="bk-round">`;
+      html+=`<div class="bk-round-title">${rLabel}</div>`;
+      rMatches.forEach((m,mi)=>{
+        const aWin=m.winner===0, bWin=m.winner===1;
+        const aName=m.teamA||(lang==='zh'?'待定':'TBD');
+        const bName=m.teamB||(lang==='zh'?'待定':'TBD');
+        const aEmoji=m.emojiA||'';
+        const bEmoji=m.emojiB||'';
+        const spacer=rMatches.length>1?(mi<rMatches.length-1?'margin-bottom:'+(40*(Math.pow(2,ri)))+'px':''):'';
+        html+=`<div class="bk-match-wrap" style="${spacer}">
+          <div class="bk-match">
+            <div class="bk-team ${aWin?'winner':(!aName||aName==='待定'?'tbd':'')}">${aEmoji} ${aName} <span class="bk-score">${m.scoreA||''}</span></div>
+            <div class="bk-team ${bWin?'winner':(!bName||bName==='待定'?'tbd':'')}">${bEmoji} ${bName} <span class="bk-score">${m.scoreB||''}</span></div>
           </div>
-        </div>`).join('')}
-      ${champ?`<div class="champion-box" style="text-align:center;margin-top:4px">
-        <div class="champion-crown">👑</div>
-        <div class="champion-label">CHAMPION</div>
-        <div class="champion-name">${champ}</div>
-      </div>`:''}
-    </div>`;
+        </div>`;
+      });
+      html+=`</div>`;
+      // Connector between rounds
+      if(ri<roundNums.length-1){
+        html+=`<svg width="32" height="${Math.max(80,80*rMatches.length)}" style="flex-shrink:0;overflow:visible;margin-top:28px">`;
+        rMatches.forEach((m,mi)=>{
+          const totalH=Math.max(80,80*rMatches.length);
+          const matchH=totalH/rMatches.length;
+          const y1=(mi+0.5)*matchH;
+          const nextMatches=rounds[roundNums[ri+1]]||[];
+          const nextMatchH=Math.max(80,80*nextMatches.length)/nextMatches.length;
+          const targetIdx=Math.floor(mi/2);
+          const y2=(targetIdx+0.5)*nextMatchH;
+          html+=`<path d="M0,${y1} H16 V${y2} H32" fill="none" stroke="#2A2A3A" stroke-width="2"/>`;
+        });
+        html+=`</svg>`;
+      }
+    });
+    // Champion
+    if(champ){
+      html+=`<div class="bk-champ">
+        <div class="bk-champ-crown">👑</div>
+        <div class="bk-champ-label">CHAMPION</div>
+        <div class="bk-champ-name">${champ}</div>
+      </div>`;
+    }
+    html+='</div>';
+    el.innerHTML=html;
   }
 
   const games=b.schedule||[];
@@ -230,12 +287,6 @@ function renderBracket(b){
       <div class="game-teams">${g.name||''}<br><span style="font-size:11px;color:var(--muted)">${g.teams||''}</span></div>
       <div><span class="game-status ${statusClass(g.status)}">${g.court||''}</span></div>
     </div>`).join('');
-}
-
-function simpleSlot(name,emoji,score,isWinner){
-  const n=name||'TBD';
-  const e=emoji||'';
-  return`<div class="team-slot ${isWinner?'winner':''}">${e} ${n} <span class="slot-score">${score||''}</span></div>`;
 }
 
 function renderInfo(info){

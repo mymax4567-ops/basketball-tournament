@@ -377,8 +377,13 @@ function renderMatchesList(){
   el.innerHTML=matchesData.map((m,i)=>`
     <div class="list-item">
       <button class="remove-btn" onclick="removeMatch(${i})">✕</button>
-      <div class="field"><label>場次名稱（例如：準決賽、決賽、八強第1場）</label>
-        <input value="${m.name||''}" oninput="matchesData[${i}].name=this.value" placeholder="準決賽 SF1"/>
+      <div class="field-row">
+        <div class="field"><label>場次名稱</label>
+          <input value="${m.name||''}" oninput="matchesData[${i}].name=this.value" placeholder="八強、準決賽、決賽..."/>
+        </div>
+        <div class="field" style="max-width:90px"><label>輪次（第幾輪）</label>
+          <input type="number" min="1" value="${m.round||1}" oninput="matchesData[${i}].round=parseInt(this.value)||1" placeholder="1"/>
+        </div>
       </div>
       <div class="team-grid">
         <div class="field"><label>隊伍A 名稱</label><input value="${m.teamA||''}" oninput="matchesData[${i}].teamA=this.value" placeholder="火焰隊"/></div>
@@ -399,7 +404,7 @@ function renderMatchesList(){
       </div>
     </div>`).join('');
 }
-function addMatch(){matchesData.push({name:'',teamA:'',emojiA:'',teamB:'',emojiB:'',scoreA:'',scoreB:'',winner:-1});renderMatchesList();}
+function addMatch(){matchesData.push({name:'',round:1,teamA:'',emojiA:'',teamB:'',emojiB:'',scoreA:'',scoreB:'',winner:-1});renderMatchesList();}
 function removeMatch(i){matchesData.splice(i,1);renderMatchesList();}
 function setMatchWinner(i,w){matchesData[i].winner=w;renderMatchesList();}
 

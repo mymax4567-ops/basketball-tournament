@@ -33,22 +33,21 @@ header h1 span{color:var(--orange);}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;}
 .card-title{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--orange);margin-bottom:14px;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
 .card-title::after{content:'';flex:1;height:1px;background:var(--border);}
-.bracket-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
-.bk-container{display:flex;align-items:center;gap:0;min-width:max-content;padding:16px 8px;}
-.bk-round{display:flex;flex-direction:column;position:relative;}
-.bk-round-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--orange);text-transform:uppercase;text-align:center;margin-bottom:10px;padding:0 12px;}
-.bk-match-wrap{display:flex;flex-direction:column;justify-content:center;position:relative;}
-.bk-match{background:var(--dark3);border:1px solid var(--border);border-radius:8px;width:130px;margin:0 8px;overflow:hidden;}
-.bk-team{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);}
+.bracket-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 12px;}
+.bk-outer{display:inline-flex;align-items:flex-start;gap:0;padding:8px;}
+.bk-col{display:flex;flex-direction:column;align-items:center;}
+.bk-col-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--orange);text-transform:uppercase;text-align:center;margin-bottom:8px;white-space:nowrap;}
+.bk-col-body{position:relative;}
+.bk-match{position:absolute;background:var(--dark3);border:1px solid var(--border);border-radius:8px;width:120px;overflow:hidden;left:8px;}
+.bk-team{display:flex;justify-content:space-between;align-items:center;padding:6px 9px;font-size:12px;font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;}
 .bk-team:last-child{border-bottom:none;}
 .bk-team.winner{background:rgba(255,107,0,0.15);color:var(--orange);}
-.bk-team.tbd{color:var(--muted);font-style:italic;font-size:11px;}
-.bk-score{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--orange);}
-.bk-connector{display:flex;flex-direction:column;justify-content:center;width:20px;flex-shrink:0;}
-.bk-champ{background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,107,0,0.1));border:2px solid var(--gold);border-radius:10px;padding:14px 12px;text-align:center;min-width:100px;margin-left:8px;}
-.bk-champ-crown{font-size:24px;}
+.bk-score{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--orange);margin-left:4px;flex-shrink:0;}
+.bk-conn{position:relative;flex-shrink:0;}
+.bk-champ{background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,107,0,0.1));border:2px solid var(--gold);border-radius:10px;padding:12px;text-align:center;width:100px;}
+.bk-champ-crown{font-size:22px;}
 .bk-champ-label{font-size:8px;letter-spacing:2px;color:var(--gold);font-weight:700;margin:3px 0;}
-.bk-champ-name{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold);}
+.bk-champ-name{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--gold);}
 .bracket{display:flex;gap:0;min-width:500px;padding:10px 0;align-items:center;}
 .round{display:flex;flex-direction:column;}
 .round-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--orange);text-transform:uppercase;text-align:center;margin-bottom:12px;padding:0 8px;}
@@ -220,78 +219,80 @@ function renderBracket(b){
   if(!matches.length){
     el.innerHTML='<div class="loading">尚未設定對戰資料</div>';
   } else {
-    // Group by round
+    const CARD_H=54; // px, height of one match card (2 teams)
+    const GAP=10;    // px, gap between cards in round 1
+    const UNIT=CARD_H+GAP;
+    const COL_W=136; // px, width of each round column including padding
+
+    // Group by round, sort rounds
     const rounds={};
     matches.forEach(m=>{const r=m.round||1;if(!rounds[r])rounds[r]=[];rounds[r].push(m);});
     const roundNums=Object.keys(rounds).map(Number).sort((a,b)=>a-b);
-    const CARD_H=64; // height of one match card px
-    const GAP=12;   // gap between cards in same round
+    const rMin=roundNums[0];
+    const N1=rounds[rMin].length; // number of first-round matches
+    const totalH=N1*UNIT-GAP;
 
-    // Total height = number of round1 matches * (CARD_H + GAP)
-    const r1count=rounds[roundNums[0]].length;
-    const totalH=r1count*(CARD_H+GAP);
+    const ROUND_NAMES=['','十二強','八強','準決賽','冠軍賽','決賽'];
 
-    let html='<div class="bk-container">';
+    let html='<div class="bk-outer">';
 
     roundNums.forEach((rn,ri)=>{
+      const rel=rn-rMin; // 0-indexed relative round
+      const factor=Math.pow(2,rel);
       const rMatches=rounds[rn];
-      const factor=Math.pow(2,ri); // how many r1 slots each match in this round spans
-      const slotH=factor*(CARD_H+GAP);
-      const roundLabel=['','十二強','八強','準決賽','冠軍賽','決賽'][rn]||('第'+rn+'輪');
+      const label=ROUND_NAMES[rn]||('第'+rn+'輪');
+      const colBodyH=totalH;
 
-      html+=`<div class="bk-round" style="position:relative;height:${totalH}px;flex-shrink:0">`;
-      html+=`<div class="bk-round-title">${roundLabel}</div>`;
+      html+=`<div class="bk-col">`;
+      html+=`<div class="bk-col-title">${label}</div>`;
+      html+=`<div class="bk-col-body" style="width:${COL_W}px;height:${colBodyH}px;position:relative;">`;
 
       rMatches.forEach((m,mi)=>{
-        const topY=mi*slotH + slotH/2 - CARD_H/2 + 22; // +22 for title offset
+        // Center of this match's slot
+        const slotTop=mi*factor*UNIT;
+        const slotH=factor*UNIT-GAP;
+        const cardTop=slotTop+(slotH-CARD_H)/2;
         const aWin=m.winner===0, bWin=m.winner===1;
-        const aName=m.teamA||'待定'; const bName=m.teamB||'待定';
+        const aName=(m.teamA||'待定').substring(0,6);
+        const bName=(m.teamB||'待定').substring(0,6);
         const aE=m.emojiA||''; const bE=m.emojiB||'';
-        html+=`<div class="bk-match" style="position:absolute;top:${topY}px;left:8px;right:8px">
-          <div class="bk-team ${aWin?'winner':''}">${aE} ${aName} <span class="bk-score">${m.scoreA||''}</span></div>
-          <div class="bk-team ${bWin?'winner':''}">${bE} ${bName} <span class="bk-score">${m.scoreB||''}</span></div>
+
+        html+=`<div class="bk-match" style="top:${cardTop}px;height:${CARD_H}px;">
+          <div class="bk-team ${aWin?'winner':''}" style="height:${CARD_H/2}px">${aE}${aName}<span class="bk-score">${m.scoreA||''}</span></div>
+          <div class="bk-team ${bWin?'winner':''}" style="height:${CARD_H/2}px">${bE}${bName}<span class="bk-score">${m.scoreB||''}</span></div>
         </div>`;
+
+        // Draw connector to next round
+        if(ri<roundNums.length-1){
+          const myCenterY=cardTop+CARD_H/2;
+          const partnerIdx=mi%2===0?mi+1:mi-1;
+          const partnerSlotTop=partnerIdx*factor*UNIT;
+          const partnerSlotH=factor*UNIT-GAP;
+          const partnerCardTop=partnerSlotTop+(partnerSlotH-CARD_H)/2;
+          const partnerCenterY=partnerCardTop+CARD_H/2;
+          const midY=(myCenterY+partnerCenterY)/2;
+          const rightX=COL_W-8; // right edge of card = 8+120
+          // Only draw connector for even index (top of pair)
+          if(mi%2===0){
+            html+=`<svg style="position:absolute;top:0;left:0;width:${COL_W+24}px;height:${colBodyH}px;overflow:visible;pointer-events:none">
+              <line x1="${rightX}" y1="${myCenterY}" x2="${rightX+12}" y2="${myCenterY}" stroke="#FF6B00" stroke-width="1.5" opacity="0.6"/>
+              <line x1="${rightX}" y1="${partnerCenterY}" x2="${rightX+12}" y2="${partnerCenterY}" stroke="#FF6B00" stroke-width="1.5" opacity="0.6"/>
+              <line x1="${rightX+12}" y1="${myCenterY}" x2="${rightX+12}" y2="${partnerCenterY}" stroke="#FF6B00" stroke-width="1.5" opacity="0.6"/>
+              <line x1="${rightX+12}" y1="${midY}" x2="${rightX+24}" y2="${midY}" stroke="#FF6B00" stroke-width="1.5" opacity="0.6"/>
+            </svg>`;
+          }
+        }
       });
 
-      // Draw SVG connectors to next round
-      if(ri < roundNums.length-1){
-        const nextRn=roundNums[ri+1];
-        const nextMatches=rounds[nextRn];
-        const nextFactor=Math.pow(2,ri+1);
-        const nextSlotH=nextFactor*(CARD_H+GAP);
-        // Each 2 matches in current round connect to 1 match in next round
-        for(let ni=0;ni<nextMatches.length;ni++){
-          const m1idx=ni*2, m2idx=ni*2+1;
-          if(m1idx>=rMatches.length) break;
-          const y1=m1idx*slotH+slotH/2+22;
-          const y2=m2idx<rMatches.length?m2idx*slotH+slotH/2+22:y1;
-          const midY=(y1+y2)/2;
-          const targetY=ni*nextSlotH+nextSlotH/2+22;
-          // connector line: right edge of this round's card to left edge of next round
-          html+=`<svg style="position:absolute;top:0;right:-16px;width:16px;height:${totalH}px;overflow:visible;z-index:1" xmlns="http://www.w3.org/2000/svg">
-            <line x1="0" y1="${y1}" x2="8" y2="${y1}" stroke="#FF6B00" stroke-width="1.5" opacity="0.5"/>
-            ${m2idx<rMatches.length?`<line x1="0" y1="${y2}" x2="8" y2="${y2}" stroke="#FF6B00" stroke-width="1.5" opacity="0.5"/>`:``}
-            <line x1="8" y1="${y1}" x2="8" y2="${y2}" stroke="#FF6B00" stroke-width="1.5" opacity="0.5"/>
-            <line x1="8" y1="${midY}" x2="16" y2="${midY}" stroke="#FF6B00" stroke-width="1.5" opacity="0.5"/>
-          </svg>`;
-        }
-      }
-      html+=`</div>`;
-
-      // Spacer between rounds
-      if(ri < roundNums.length-1){
-        html+=`<div style="width:16px;flex-shrink:0"></div>`;
-      }
+      html+=`</div></div>`;
+      // Spacer between columns for connector lines
+      if(ri<roundNums.length-1) html+=`<div style="width:24px;flex-shrink:0"></div>`;
     });
 
     // Champion
     if(champ){
-      html+=`<div style="display:flex;align-items:center;margin-left:16px">
-        <div class="bk-champ">
-          <div class="bk-champ-crown">👑</div>
-          <div class="bk-champ-label">CHAMPION</div>
-          <div class="bk-champ-name">${champ}</div>
-        </div>
+      html+=`<div style="display:flex;align-items:center;padding-top:30px;margin-left:12px">
+        <div class="bk-champ"><div class="bk-champ-crown">👑</div><div class="bk-champ-label">CHAMPION</div><div class="bk-champ-name">${champ}</div></div>
       </div>`;
     }
     html+='</div>';

@@ -195,68 +195,12 @@ body{background:var(--bg);color:var(--dark);font-family:'Noto Sans TC',sans-seri
     <!-- 晉級賽 -->
     <div class="admin-section" id="asec-bracket">
       <div class="section-title">🏆 晉級賽對戰</div>
-      <div class="card">
-        <div class="card-label">準決賽 SF1</div>
-        <div class="team-grid">
-          <div class="field"><label>隊伍A 名稱</label><input id="sf1-t0-name" placeholder="火焰隊"/></div>
-          <div class="field"><label>隊伍A Emoji</label><input id="sf1-t0-emoji" placeholder="🔥"/></div>
-          <div class="field"><label>隊伍B 名稱</label><input id="sf1-t1-name" placeholder="雷霆隊"/></div>
-          <div class="field"><label>隊伍B Emoji</label><input id="sf1-t1-emoji" placeholder="⚡"/></div>
-        </div>
-        <div class="score-row">
-          <div class="field" style="flex:1"><label>隊伍A 分數</label><input id="sf1-s0"/></div>
-          <span>vs</span>
-          <div class="field" style="flex:1"><label>隊伍B 分數</label><input id="sf1-s1"/></div>
-        </div>
-        <label style="font-size:12px;color:var(--muted);font-weight:700">勝者</label>
-        <div class="winner-select">
-          <button class="winner-btn" id="sf1-w0" onclick="setWinner('sf1',0)">隊伍A 勝</button>
-          <button class="winner-btn" id="sf1-w1" onclick="setWinner('sf1',1)">隊伍B 勝</button>
-          <button class="winner-btn" id="sf1-wn" onclick="setWinner('sf1',-1)">未定</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">準決賽 SF2</div>
-        <div class="team-grid">
-          <div class="field"><label>隊伍A 名稱</label><input id="sf2-t0-name"/></div>
-          <div class="field"><label>隊伍A Emoji</label><input id="sf2-t0-emoji"/></div>
-          <div class="field"><label>隊伍B 名稱</label><input id="sf2-t1-name"/></div>
-          <div class="field"><label>隊伍B Emoji</label><input id="sf2-t1-emoji"/></div>
-        </div>
-        <div class="score-row">
-          <div class="field" style="flex:1"><label>隊伍A 分數</label><input id="sf2-s0"/></div>
-          <span>vs</span>
-          <div class="field" style="flex:1"><label>隊伍B 分數</label><input id="sf2-s1"/></div>
-        </div>
-        <label style="font-size:12px;color:var(--muted);font-weight:700">勝者</label>
-        <div class="winner-select">
-          <button class="winner-btn" id="sf2-w0" onclick="setWinner('sf2',0)">隊伍A 勝</button>
-          <button class="winner-btn" id="sf2-w1" onclick="setWinner('sf2',1)">隊伍B 勝</button>
-          <button class="winner-btn" id="sf2-wn" onclick="setWinner('sf2',-1)">未定</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">決賽 FINAL</div>
-        <div class="score-row">
-          <div class="field" style="flex:1"><label>隊伍1 名稱</label><input id="fin-t1"/></div>
-          <span>vs</span>
-          <div class="field" style="flex:1"><label>隊伍2 名稱</label><input id="fin-t2"/></div>
-        </div>
-        <div class="score-row">
-          <div class="field" style="flex:1"><label>分數1</label><input id="fin-s1"/></div>
-          <span>vs</span>
-          <div class="field" style="flex:1"><label>分數2</label><input id="fin-s2"/></div>
-        </div>
-        <label style="font-size:12px;color:var(--muted);font-weight:700">勝者</label>
-        <div class="winner-select">
-          <button class="winner-btn" id="fin-w1" onclick="setWinner('fin',1)">隊伍1 勝</button>
-          <button class="winner-btn" id="fin-w2" onclick="setWinner('fin',2)">隊伍2 勝</button>
-          <button class="winner-btn" id="fin-wn" onclick="setWinner('fin',-1)">未定</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-label">冠軍</div>
-        <div class="field"><label>冠軍隊名</label><input id="champ" placeholder="火焰隊"/></div>
+      <div class="hint-box">可以自由新增場次，例如：八強賽、四強賽、準決賽、決賽，不限數量。</div>
+      <div id="matches-list"></div>
+      <button class="btn btn-add" onclick="addMatch()">＋ 新增對戰場次</button>
+      <div class="card" style="margin-top:16px">
+        <div class="card-label">👑 冠軍</div>
+        <div class="field"><label>冠軍隊名（活動結束後填入）</label><input id="champ" placeholder="火焰隊"/></div>
       </div>
     </div>
 
@@ -425,7 +369,39 @@ const db=firebase.database();
 let currentUser='';
 let accountsCache={};
 let logoBase64='';
-const winners={sf1:-1,sf2:-1,fin:-1};
+let matchesData=[];
+
+function renderMatchesList(){
+  const el=document.getElementById('matches-list');
+  if(!matchesData.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:12px 0">尚未新增場次，點下方按鈕新增</div>';return;}
+  el.innerHTML=matchesData.map((m,i)=>`
+    <div class="list-item">
+      <button class="remove-btn" onclick="removeMatch(${i})">✕</button>
+      <div class="field"><label>場次名稱（例如：準決賽、決賽、八強第1場）</label>
+        <input value="${m.name||''}" oninput="matchesData[${i}].name=this.value" placeholder="準決賽 SF1"/>
+      </div>
+      <div class="team-grid">
+        <div class="field"><label>隊伍A 名稱</label><input value="${m.teamA||''}" oninput="matchesData[${i}].teamA=this.value" placeholder="火焰隊"/></div>
+        <div class="field"><label>隊伍A Emoji</label><input value="${m.emojiA||''}" oninput="matchesData[${i}].emojiA=this.value" placeholder="🔥"/></div>
+        <div class="field"><label>隊伍B 名稱</label><input value="${m.teamB||''}" oninput="matchesData[${i}].teamB=this.value" placeholder="雷霆隊"/></div>
+        <div class="field"><label>隊伍B Emoji</label><input value="${m.emojiB||''}" oninput="matchesData[${i}].emojiB=this.value" placeholder="⚡"/></div>
+      </div>
+      <div class="score-row">
+        <div class="field" style="flex:1"><label>隊伍A 分數</label><input value="${m.scoreA||''}" oninput="matchesData[${i}].scoreA=this.value"/></div>
+        <span>vs</span>
+        <div class="field" style="flex:1"><label>隊伍B 分數</label><input value="${m.scoreB||''}" oninput="matchesData[${i}].scoreB=this.value"/></div>
+      </div>
+      <label style="font-size:12px;color:var(--muted);font-weight:700">勝者</label>
+      <div class="winner-select">
+        <button class="winner-btn ${m.winner===0?'active':''}" onclick="setMatchWinner(${i},0)">隊伍A 勝</button>
+        <button class="winner-btn ${m.winner===1?'active':''}" onclick="setMatchWinner(${i},1)">隊伍B 勝</button>
+        <button class="winner-btn ${m.winner===-1||m.winner===undefined?'active':''}" onclick="setMatchWinner(${i},-1)">未定</button>
+      </div>
+    </div>`).join('');
+}
+function addMatch(){matchesData.push({name:'',teamA:'',emojiA:'',teamB:'',emojiB:'',scoreA:'',scoreB:'',winner:-1});renderMatchesList();}
+function removeMatch(i){matchesData.splice(i,1);renderMatchesList();}
+function setMatchWinner(i,w){matchesData[i].winner=w;renderMatchesList();}
 
 // ── AUTH ──
 function showLogin(){document.getElementById('forgot-wrap').style.display='none';document.getElementById('login-wrap').style.display='flex';}
@@ -476,8 +452,7 @@ function doReset(){
   const game=buildGameData();
   const b=game.bracket;
   // clear scores/winners
-  if(b.semifinals){b.semifinals.forEach(sf=>{sf.scores=['',''];sf.winner=-1;});}
-  if(b.final){b.final.score1='';b.final.score2='';b.final.winner=-1;}
+  if(b.matches){b.matches.forEach(m=>{m.scoreA='';m.scoreB='';m.winner=-1;});}
   b.champion='';
   if(b.schedule)b.schedule.forEach(g=>g.status='upcoming');
   db.ref('/game').update({bracket:b}).then(()=>{
@@ -531,13 +506,7 @@ function showAdmin(name){
 }
 
 // ── WINNER ──
-function setWinner(match,w){
-  winners[match]=w;
-  const map={sf1:['sf1-w0','sf1-w1','sf1-wn'],sf2:['sf2-w0','sf2-w1','sf2-wn'],fin:['fin-w1','fin-w2','fin-wn']};
-  map[match].forEach(id=>document.getElementById(id)?.classList.remove('active'));
-  const idx=match==='fin'?(w===1?0:w===2?1:2):(w===0?0:w===1?1:2);
-  document.getElementById(map[match][idx])?.classList.add('active');
-}
+// setWinner replaced by setMatchWinner
 
 // ── LISTS ──
 let scheduleData=[],infoData=[],noticesData=[],contactsData=[];
@@ -712,33 +681,9 @@ function loadData(){
       if(g.header.logoBase64){logoBase64=g.header.logoBase64;const p=document.getElementById('logo-preview');p.src=logoBase64;p.classList.add('visible');}
     }
     if(g.bracket){
-      const sf=g.bracket.semifinals||[];
-      if(sf[0]){
-        document.getElementById('sf1-t0-name').value=sf[0].teams?.[0]?.name||'';
-        document.getElementById('sf1-t0-emoji').value=sf[0].teams?.[0]?.emoji||'';
-        document.getElementById('sf1-t1-name').value=sf[0].teams?.[1]?.name||'';
-        document.getElementById('sf1-t1-emoji').value=sf[0].teams?.[1]?.emoji||'';
-        document.getElementById('sf1-s0').value=sf[0].scores?.[0]||'';
-        document.getElementById('sf1-s1').value=sf[0].scores?.[1]||'';
-        setWinner('sf1',sf[0].winner??-1);
-      }
-      if(sf[1]){
-        document.getElementById('sf2-t0-name').value=sf[1].teams?.[0]?.name||'';
-        document.getElementById('sf2-t0-emoji').value=sf[1].teams?.[0]?.emoji||'';
-        document.getElementById('sf2-t1-name').value=sf[1].teams?.[1]?.name||'';
-        document.getElementById('sf2-t1-emoji').value=sf[1].teams?.[1]?.emoji||'';
-        document.getElementById('sf2-s0').value=sf[1].scores?.[0]||'';
-        document.getElementById('sf2-s1').value=sf[1].scores?.[1]||'';
-        setWinner('sf2',sf[1].winner??-1);
-      }
-      if(g.bracket.final){
-        document.getElementById('fin-t1').value=g.bracket.final.team1?.name||'';
-        document.getElementById('fin-t2').value=g.bracket.final.team2?.name||'';
-        document.getElementById('fin-s1').value=g.bracket.final.score1||'';
-        document.getElementById('fin-s2').value=g.bracket.final.score2||'';
-        setWinner('fin',g.bracket.final.winner??-1);
-      }
+      matchesData=g.bracket.matches||[];
       document.getElementById('champ').value=g.bracket.champion||'';
+      renderMatchesList();
     }
     scheduleData=g.bracket?.schedule||[];
     infoData=g.info||[];noticesData=g.notices||[];contactsData=g.contacts||[];
@@ -762,11 +707,7 @@ function buildGameData(){
       logoBase64:logoBase64||''
     },
     bracket:{
-      semifinals:[
-        {teams:[{name:document.getElementById('sf1-t0-name').value,emoji:document.getElementById('sf1-t0-emoji').value},{name:document.getElementById('sf1-t1-name').value,emoji:document.getElementById('sf1-t1-emoji').value}],scores:[document.getElementById('sf1-s0').value,document.getElementById('sf1-s1').value],winner:winners.sf1},
-        {teams:[{name:document.getElementById('sf2-t0-name').value,emoji:document.getElementById('sf2-t0-emoji').value},{name:document.getElementById('sf2-t1-name').value,emoji:document.getElementById('sf2-t1-emoji').value}],scores:[document.getElementById('sf2-s0').value,document.getElementById('sf2-s1').value],winner:winners.sf2}
-      ],
-      final:{team1:{name:document.getElementById('fin-t1').value},team2:{name:document.getElementById('fin-t2').value},score1:document.getElementById('fin-s1').value,score2:document.getElementById('fin-s2').value,winner:winners.fin},
+      matches:matchesData,
       champion:document.getElementById('champ').value,
       schedule:scheduleData
     },

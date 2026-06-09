@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>後台管理｜籃球錦標賽</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#E85D04;--bg:#F5F4F0;--white:#fff;--dark:#111;--border:#E0DDD8;--muted:#888;--green:#0A6640;--red:#CC2233;--gold:#B8860B;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--dark);font-family:'Noto Sans TC',sans-serif;font-size:14px;}
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--dark);}
+.auth-box{background:var(--white);border-radius:16px;padding:36px 28px;width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+.auth-logo{font-size:40px;margin-bottom:8px;}
+.auth-title{font-size:20px;font-weight:900;margin-bottom:4px;}
+.auth-sub{font-size:12px;color:var(--muted);margin-bottom:24px;}
+.form-group{margin-bottom:14px;text-align:left;}
+.form-group label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:5px;}
+.form-group input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;outline:none;transition:border 0.2s;}
+.form-group input:focus{border-color:var(--orange);}
+.btn-main{width:100%;padding:12px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn-main:hover{background:#c94e00;}
+.auth-error{color:var(--red);font-size:12px;margin-top:10px;min-height:18px;}
+.auth-success{color:var(--green);font-size:12px;margin-top:10px;}
+.link-btn{background:none;border:none;color:var(--orange);font-size:12px;cursor:pointer;margin-top:14px;text-decoration:underline;}
+.admin-wrap{display:none;min-height:100vh;}
+.admin-header{background:var(--dark);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.admin-header h1{font-size:16px;font-weight:900;}
+.admin-header span{font-size:11px;color:#888;}
+.header-right{display:flex;gap:8px;align-items:center;}
+.btn-logout{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;}
+.admin-nav{background:#fff;border-bottom:1px solid var(--border);display:flex;overflow-x:auto;padding:0 16px;}
+.admin-nav::-webkit-scrollbar{display:none;}
+.anav{padding:14px 12px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.anav.active{color:var(--orange);border-bottom-color:var(--orange);}
+.admin-body{padding:20px 16px 80px;max-width:800px;margin:0 auto;}
+.admin-section{display:none;}
+.admin-section.active{display:block;}
+.section-title{font-size:18px;font-weight:900;margin-bottom:16px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px;}
+.card-label{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;}
+.field{margin-bottom:12px;}
+.field label{font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;}
+.field input:focus,.field textarea:focus{border-color:var(--orange);}
+.field textarea{resize:vertical;min-height:50px;}
+.field-row{display:flex;gap:10px;}
+.field-row .field{flex:1;}
+.lang-tab-row{display:flex;gap:0;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.lang-tab{flex:1;padding:7px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:var(--muted);}
+.lang-tab.active{background:var(--orange);color:#fff;}
+.btn{padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;}
+.btn-primary{background:var(--orange);color:#fff;}
+.btn-danger{background:rgba(204,34,51,0.1);color:var(--red);border:1px solid rgba(204,34,51,0.2);}
+.btn-warning{background:rgba(184,134,11,0.1);color:var(--gold);border:1px solid rgba(184,134,11,0.3);}
+.btn-add{background:rgba(232,93,4,0.08);color:var(--orange);border:1px solid rgba(232,93,4,0.2);width:100%;padding:10px;margin-top:8px;}
+.save-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:100;}
+.save-msg{font-size:12px;font-weight:700;}
+.list-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;position:relative;}
+.list-item .remove-btn{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;}
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.score-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.score-row span{font-size:18px;font-weight:900;color:var(--muted);}
+.winner-select{display:flex;gap:8px;margin-top:6px;}
+.winner-btn{flex:1;padding:6px;border-radius:6px;border:2px solid var(--border);background:#fff;cursor:pointer;font-size:12px;font-weight:700;}
+.winner-btn.active{border-color:var(--orange);background:rgba(232,93,4,0.08);color:var(--orange);}
+.status-btns{display:flex;gap:6px;margin-top:4px;}
+.status-btn{flex:1;padding:5px;border-radius:5px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:11px;font-weight:700;color:var(--muted);}
+.status-btn.active-upcoming{border-color:#888;color:#555;background:#f0f0f0;}
+.status-btn.active-live{border-color:#FF4466;color:#FF4466;background:rgba(255,68,102,0.08);}
+.status-btn.active-done{border-color:#0A6640;color:#0A6640;background:rgba(10,102,64,0.08);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:200;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:16px;padding:28px;width:340px;max-width:90vw;}
+.modal-title{font-size:16px;font-weight:900;margin-bottom:8px;}
+.modal-desc{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;}
+.modal-btns{display:flex;gap:8px;margin-top:16px;}
+.modal-btns .btn{flex:1;}
+.hint-box{background:rgba(10,102,64,0.06);border:1px solid rgba(10,102,64,0.2);border-radius:8px;padding:12px;font-size:12px;color:#333;line-height:1.7;margin-bottom:16px;}
+.hint-box strong{color:var(--green);}
+.warn-box{background:rgba(232,93,4,0.06);border:1px solid rgba(232,93,4,0.25);border-radius:8px;padding:12px;font-size:12px;color:#333;line-height:1.7;margin-bottom:16px;}
+.warn-box strong{color:var(--orange);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.stat-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
+.stat-num{font-size:32px;font-weight:900;color:var(--orange);}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px;font-weight:700;letter-spacing:1px;}
+.archive-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+.archive-date{font-size:11px;color:var(--muted);font-weight:700;}
+.archive-name{font-weight:700;font-size:14px;}
+.archive-champ{font-size:12px;color:var(--orange);margin-top:2px;}
+.logo-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border);display:none;margin-bottom:12px;}
+.logo-preview.visible{display:block;}
+.account-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.account-avatar{width:40px;height:40px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:16px;flex-shrink:0;}
+.account-info{flex:1;}
+.account-username{font-weight:900;font-size:14px;}
+.account-role{font-size:11px;color:var(--muted);}
+.btn-sm{padding:5px 12px;font-size:11px;border-radius:6px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:#fff;}
+.btn-sm-red{border-color:var(--red);color:var(--red);}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth-wrap" id="login-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">🏀</div>
+    <div class="auth-title">後台管理系統</div>
+    <div class="auth-sub">請輸入帳號密碼登入</div>
+    <div class="form-group"><label>帳號</label><input type="text" id="input-user" placeholder="輸入帳號"/></div>
+    <div class="form-group"><label>密碼</label><input type="password" id="input-pass" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn-main" onclick="doLogin()">登入</button>
+    <div class="auth-error" id="login-error"></div>
+    <button class="link-btn" onclick="showForgot()">忘記密碼？</button>
+  </div>
+</div>
+
+<!-- FORGOT -->
+<div class="auth-wrap" id="forgot-wrap" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo">🔑</div>
+    <div class="auth-title">重置密碼</div>
+    <div class="auth-sub">輸入帳號和主管重置碼</div>
+    <div class="form-group"><label>帳號</label><input type="text" id="fp-user" placeholder="輸入帳號"/></div>
+    <div class="form-group"><label>主管重置碼</label><input type="password" id="fp-resetcode" placeholder="向主管詢問重置碼"/></div>
+    <div class="form-group"><label>新密碼</label><input type="password" id="fp-newpass" placeholder="設定新密碼"/></div>
+    <div class="form-group"><label>確認新密碼</label><input type="password" id="fp-newpass2" placeholder="再輸入一次"/></div>
+    <button class="btn-main" onclick="doReset()">重置密碼</button>
+    <div class="auth-error" id="fp-error"></div>
+    <div class="auth-success" id="fp-success"></div>
+    <button class="link-btn" onclick="showLogin()">← 回到登入</button>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-wrap" id="admin-wrap">
+  <div class="admin-header">
+    <div><h1>🏀 後台管理</h1><span id="admin-user-label"></span></div>
+    <div class="header-right">
+      <button class="btn-logout" onclick="showChangePass()">🔒 改密碼</button>
+      <button class="btn-logout" onclick="doLogout()">登出</button>
+    </div>
+  </div>
+  <div class="admin-nav">
+    <div class="anav active" onclick="showAdmin('header')">🎨 主視覺</div>
+    <div class="anav" onclick="showAdmin('bracket')">🏆 晉級賽</div>
+    <div class="anav" onclick="showAdmin('schedule')">📋 賽程</div>
+    <div class="anav" onclick="showAdmin('info')">ℹ️ 活動</div>
+    <div class="anav" onclick="showAdmin('notices')">📢 公告</div>
+    <div class="anav" onclick="showAdmin('contacts')">📞 聯絡</div>
+    <div class="anav" onclick="showAdmin('tools')">🛠 工具</div>
+    <div class="anav" onclick="showAdmin('stats')">📊 統計</div>
+    <div class="anav" onclick="showAdmin('archives')">📦 封存</div>
+    <div class="anav" onclick="showAdmin('accounts')">👥 帳號</div>
+  </div>
+  <div class="admin-body">
+
+    <!-- 主視覺 -->
+    <div class="admin-section active" id="asec-header">
+      <div class="section-title">🎨 主視覺設定</div>
+      <div class="card">
+        <div class="card-label">活動 LOGO</div>
+        <img class="logo-preview" id="logo-preview" src="" alt="logo"/>
+        <div class="field"><label>上傳 LOGO（支援 JPG/PNG，建議正方形）</label>
+          <input type="file" id="logo-file" accept="image/*" onchange="handleLogoUpload(event)"/>
+        </div>
+        <button class="btn btn-danger" onclick="removeLogo()" style="font-size:12px;padding:6px 12px">移除 LOGO</button>
+      </div>
+      <div class="card">
+        <div class="card-label">標題設定</div>
+        <div class="lang-tab-row">
+          <div class="lang-tab active" onclick="switchHeaderLang('zh',this)">中文</div>
+          <div class="lang-tab" onclick="switchHeaderLang('en',this)">English</div>
+        </div>
+        <div id="header-zh">
+          <div class="field"><label>活動標籤（橘色小標）</label><input id="h-badge" placeholder="2026 SUMMER"/></div>
+          <div class="field-row">
+            <div class="field"><label>標題橘色字</label><input id="h-titleHL" placeholder="籃球"/></div>
+            <div class="field"><label>標題白色字</label><input id="h-titleRest" placeholder="錦標賽"/></div>
+          </div>
+          <div class="field"><label>副標題</label><input id="h-subtitle" placeholder="掃碼即時查看賽況"/></div>
+          <div class="field"><label>頁尾文字</label><input id="h-footer" placeholder="🏀 籃球錦標賽 · 技術支援：主辦單位"/></div>
+        </div>
+        <div id="header-en" style="display:none">
+          <div class="field"><label>Badge (EN)</label><input id="h-badgeEn" placeholder="2026 SUMMER"/></div>
+          <div class="field"><label>Full Title HTML (EN)</label><input id="h-titleEn" placeholder="🏀 <span>Basketball</span> Championship"/></div>
+          <div class="field"><label>Subtitle (EN)</label><input id="h-subtitleEn" placeholder="Scan QR Code for live updates"/></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 晉級賽 -->
+    <div class="admin-section" id="asec-bracket">
+      <div class="section-title">🏆 晉級賽對戰</div>
+      <div class="card">
+        <div class="card-label">準決賽 SF1</div>
+        <div class="team-grid">
+          <div class="field"><label>隊伍A 名稱</label><input id="sf1-t0-name" placeholder="火焰隊"/></div>
+          <div class="field"><label>隊伍A Emoji</label><input id="sf1-t0-emoji" placeholder="🔥"/></div>
+          <div class="field"><label>隊伍B 名稱</label><input id="sf1-t1-name" placeholder="雷霆隊"/></div>
+          <div class="field"><label>隊伍B Emoji</label><input id="sf1-t1-emoji" placeholder="⚡"/></div>
+        </div>
+        <div class="score-row">
+          <div class="field" style="flex:1"><label>隊伍A 分數</label><input id="sf1-s0"/></div>
+          <span>vs</span>
+          <div class="field" style="flex:1"><label>隊伍B 分數</label><input id="sf1-s1"/></div>
+        </div>
+        <label style="font-size:12px;color:var(--muted);font-weight:700">勝者</label>
+        <div class="winner-select">
+          <button class="winner-btn" id="sf1-w0" onclick="setWinner('sf1',0)">隊伍A 勝</button>
+          <button class="winner-btn" id="sf1-w1" onclick="setWinner('sf1',1)">隊伍B 勝</button>
+          <button class="winner-btn" id="sf1-wn" onclick="setWinner('sf1',-1)">未定</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">準決賽 SF2</div>
+        <div class="team-grid">
+          <div class="field"><label>隊伍A 名稱</label><input id="sf2-t0-name"/></div>
+          <div class="field"><label>隊伍A Emoji</label><input id="sf2-t0-emoji"/></div>
+          <div class="field"><label>隊伍B 名稱</label><input id="sf2-t1-name"/></div>
+          <div class="field"><label>隊伍B Emoji</label><input id="sf2-t1-emoji"/></div>
+        </div>
+        <div class="score-row">
+          <div class="field" style="flex:1"><label>隊伍A 分數</label><input id="sf2-s0"/></div>
+          <span>vs</span>
+          <div class="field" style="flex:1"><label>隊伍B 分數</label><input id="sf2-s1"/></div>
+        </div>
+        <label style="font-size:12px;color:var(--muted);font-weight:700">勝者</label>
+        <div class="winner-select">
+          <button class="winner-btn" id="sf2-w0" onclick="setWinner('sf2',0)">隊伍A 勝</button>
+          <button class="winner-btn" id="sf2-w1" onclick="setWinner('sf2',1)">隊伍B 勝</button>
+          <button class="winner-btn" id="sf2-wn" onclick="setWinner('sf2',-1)">未定</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">決賽 FINAL</div>
+        <div class="score-row">
+          <div class="field" style="flex:1"><label>隊伍1 名稱</label><input id="fin-t1"/></div>
+          <span>vs</span>
+          <div class="field" style="flex:1"><label>隊伍2 名稱</label><input id="fin-t2"/></div>
+        </div>
+        <div class="score-row">
+          <div class="field" style="flex:1"><label>分數1</label><input id="fin-s1"/></div>
+          <span>vs</span>
+          <div class="field" style="flex:1"><label>分數2</label><input id="fin-s2"/></div>
+        </div>
+        <label style="font-size:12px;color:var(--muted);font-weight:700">勝者</label>
+        <div class="winner-select">
+          <button class="winner-btn" id="fin-w1" onclick="setWinner('fin',1)">隊伍1 勝</button>
+          <button class="winner-btn" id="fin-w2" onclick="setWinner('fin',2)">隊伍2 勝</button>
+          <button class="winner-btn" id="fin-wn" onclick="setWinner('fin',-1)">未定</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">冠軍</div>
+        <div class="field"><label>冠軍隊名</label><input id="champ" placeholder="火焰隊"/></div>
+      </div>
+    </div>
+
+    <!-- 賽程 -->
+    <div class="admin-section" id="asec-schedule">
+      <div class="section-title">📋 晉級賽程</div>
+      <div id="schedule-list"></div>
+      <button class="btn btn-add" onclick="addSchedule()">＋ 新增場次</button>
+    </div>
+
+    <!-- 活動資訊 -->
+    <div class="admin-section" id="asec-info">
+      <div class="section-title">ℹ️ 活動基本資訊</div>
+      <div id="info-list"></div>
+      <button class="btn btn-add" onclick="addInfo()">＋ 新增項目</button>
+    </div>
+
+    <!-- 公告 -->
+    <div class="admin-section" id="asec-notices">
+      <div class="section-title">📢 最新公告</div>
+      <div id="notices-list"></div>
+      <button class="btn btn-add" onclick="addNotice()">＋ 新增公告</button>
+    </div>
+
+    <!-- 聯絡 -->
+    <div class="admin-section" id="asec-contacts">
+      <div class="section-title">📞 聯絡資訊</div>
+      <div id="contacts-list"></div>
+      <button class="btn btn-add" onclick="addContact()">＋ 新增聯絡人</button>
+    </div>
+
+    <!-- 🛠 工具（重置）-->
+    <div class="admin-section" id="asec-tools">
+      <div class="section-title">🛠 活動工具</div>
+      <div class="card">
+        <div class="card-label">🔄 一鍵重置（新活動使用）</div>
+        <div class="warn-box">
+          <strong>重置後會清除：</strong>所有比分、勝者標記、冠軍、賽程狀態<br>
+          <strong>保留的內容：</strong>隊伍名稱、隊伍 Emoji、活動資訊、聯絡人<br>
+          建議在重置前先到「📦 封存」儲存本次活動紀錄。
+        </div>
+        <button class="btn btn-warning" onclick="openModal('reset-modal')" style="width:100%;padding:12px;font-size:14px">
+          🔄 重置分數，開始新活動
+        </button>
+      </div>
+    </div>
+
+    <!-- 📊 統計 -->
+    <div class="admin-section" id="asec-stats">
+      <div class="section-title">📊 掃碼統計報告</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="stat-visits">-</div><div class="stat-label">總瀏覽次數</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-bracket">-</div><div class="stat-label">晉級賽 點擊</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-info">-</div><div class="stat-label">活動資訊 點擊</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-total">-</div><div class="stat-label">分頁互動總計</div></div>
+      </div>
+      <div class="card">
+        <div class="card-label">數據說明</div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.8">
+          · <strong>總瀏覽次數</strong>：每次有人打開公開頁面就計算一次<br>
+          · <strong>分頁點擊</strong>：觀眾切換到該分頁的次數<br>
+          · 數據即時更新，可直接截圖給客戶看
+        </p>
+        <button class="btn btn-danger" onclick="openModal('resetstats-modal')" style="margin-top:12px;font-size:12px;padding:6px 14px">清除統計數據</button>
+      </div>
+    </div>
+
+    <!-- 📦 封存 -->
+    <div class="admin-section" id="asec-archives">
+      <div class="section-title">📦 活動封存紀錄</div>
+      <div class="card">
+        <div class="card-label">封存本次活動</div>
+        <div class="hint-box">封存後資料會永久保留，不受重置影響。可用來向新客戶展示過去的活動成果。</div>
+        <div class="field"><label>封存名稱（例如：2026 夏季 3v3 錦標賽）</label><input id="archive-name" placeholder="輸入活動名稱"/></div>
+        <button class="btn btn-primary" onclick="doArchive()" style="width:100%;padding:12px">📦 立即封存本次活動</button>
+        <div id="archive-msg" style="font-size:12px;margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">歷史紀錄</div>
+        <div id="archives-list"><div style="color:var(--muted);font-size:13px">載入中...</div></div>
+      </div>
+    </div>
+
+    <!-- 👥 帳號 -->
+    <div class="admin-section" id="asec-accounts">
+      <div class="section-title">👥 帳號管理</div>
+      <div class="hint-box"><strong>主管重置碼</strong>是忘記密碼時使用的備用碼，請妥善保管。</div>
+      <div class="card">
+        <div class="card-label">主管重置碼設定</div>
+        <div class="field"><label>重置碼</label><input type="password" id="master-code-input" placeholder="輸入新的重置碼"/></div>
+        <button class="btn btn-primary" onclick="saveMasterCode()" style="width:100%">儲存重置碼</button>
+        <div id="master-msg" style="font-size:12px;color:var(--green);margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-label">所有帳號</div>
+        <div id="accounts-list"></div>
+        <hr class="divider">
+        <div class="card-label">新增帳號</div>
+        <div class="field-row">
+          <div class="field"><label>帳號</label><input id="new-user" placeholder="staff03"/></div>
+          <div class="field"><label>密碼</label><input type="password" id="new-pass" placeholder="設定密碼"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="addAccount()" style="width:100%">＋ 新增帳號</button>
+        <div id="add-account-msg" style="font-size:12px;margin-top:8px;"></div>
+      </div>
+    </div>
+
+  </div><!-- admin-body -->
+
+  <div class="save-bar">
+    <span class="save-msg" id="save-msg"></span>
+    <button class="btn btn-primary" onclick="saveAll()">💾 儲存並發布</button>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal">
+    <div class="modal-title">🔄 確認重置分數？</div>
+    <div class="modal-desc">這會清除所有比分和勝者標記，隊伍名稱會保留。<br><strong>建議先到「封存」頁面儲存本次活動。</strong></div>
+    <div class="modal-btns">
+      <button class="btn" style="background:var(--bg);border:1px solid var(--border)" onclick="closeModal('reset-modal')">取消</button>
+      <button class="btn btn-warning" onclick="doReset()">確認重置</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="resetstats-modal">
+  <div class="modal">
+    <div class="modal-title">⚠️ 清除統計數據？</div>
+    <div class="modal-desc">所有瀏覽次數和分頁點擊紀錄將歸零，此動作無法復原。</div>
+    <div class="modal-btns">
+      <button class="btn" style="background:var(--bg);border:1px solid var(--border)" onclick="closeModal('resetstats-modal')">取消</button>
+      <button class="btn btn-danger" onclick="doResetStats()">確認清除</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="changepass-modal">
+  <div class="modal">
+    <div class="modal-title">🔒 更改密碼</div>
+    <div class="form-group"><label>舊密碼</label><input type="password" id="cp-old"/></div>
+    <div class="form-group"><label>新密碼</label><input type="password" id="cp-new"/></div>
+    <div class="form-group"><label>確認新密碼</label><input type="password" id="cp-new2"/></div>
+    <div id="cp-error" style="font-size:12px;color:var(--red);min-height:16px;"></div>
+    <div class="modal-btns">
+      <button class="btn" style="background:var(--bg);border:1px solid var(--border)" onclick="closeModal('changepass-modal')">取消</button>
+      <button class="btn btn-primary" onclick="doChangePass()">確認更改</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <div class="modal-title">⚠️ 確認刪除帳號</div>
+    <div class="modal-desc">確定要刪除帳號 <strong id="delete-username"></strong> 嗎？</div>
+    <div class="modal-btns">
+      <button class="btn" style="background:var(--bg);border:1px solid var(--border)" onclick="closeModal('delete-modal')">取消</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">確認刪除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyAvXt3l1WIwuwzTEiK8f0pXtC73qyu8p28",authDomain:"funplay-f29f4.firebaseapp.com",databaseURL:"https://funplay-f29f4-default-rtdb.firebaseio.com",projectId:"funplay-f29f4",storageBucket:"funplay-f29f4.firebasestorage.app",messagingSenderId:"931596968438",appId:"1:931596968438:web:c47a7c31f4cc3b4adee7d7"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+let currentUser='';
+let accountsCache={};
+let logoBase64='';
+const winners={sf1:-1,sf2:-1,fin:-1};
+
+// ── AUTH ──
+function showLogin(){document.getElementById('forgot-wrap').style.display='none';document.getElementById('login-wrap').style.display='flex';}
+function showForgot(){document.getElementById('login-wrap').style.display='none';document.getElementById('forgot-wrap').style.display='flex';}
+
+async function doLogin(){
+  const user=document.getElementById('input-user').value.trim();
+  const pass=document.getElementById('input-pass').value;
+  document.getElementById('login-error').textContent='';
+  if(!user||!pass){document.getElementById('login-error').textContent='請輸入帳號和密碼';return;}
+  try{
+    const snap=await db.ref('/accounts/'+user).once('value');
+    const data=snap.val();
+    if(data&&data.password===pass){
+      currentUser=user;
+      document.getElementById('login-wrap').style.display='none';
+      document.getElementById('admin-wrap').style.display='block';
+      document.getElementById('admin-user-label').textContent='登入帳號：'+user;
+      loadData();
+    } else document.getElementById('login-error').textContent='帳號或密碼錯誤';
+  } catch(e){document.getElementById('login-error').textContent='連線失敗，請確認Firebase設定';}
+}
+function doLogout(){currentUser='';document.getElementById('admin-wrap').style.display='none';document.getElementById('login-wrap').style.display='flex';document.getElementById('input-pass').value='';}
+
+async function doForgotReset(){
+  const user=document.getElementById('fp-user').value.trim();
+  const code=document.getElementById('fp-resetcode').value;
+  const np=document.getElementById('fp-newpass').value;
+  const np2=document.getElementById('fp-newpass2').value;
+  const err=document.getElementById('fp-error');const ok=document.getElementById('fp-success');
+  err.textContent='';ok.textContent='';
+  if(!user||!code||!np){err.textContent='請填寫所有欄位';return;}
+  if(np!==np2){err.textContent='兩次密碼不一致';return;}
+  if(np.length<4){err.textContent='密碼至少4個字元';return;}
+  try{
+    const ms=await db.ref('/masterCode').once('value');
+    if(!ms.val()||ms.val()!==code){err.textContent='重置碼錯誤';return;}
+    const as=await db.ref('/accounts/'+user).once('value');
+    if(!as.val()){err.textContent='找不到此帳號';return;}
+    await db.ref('/accounts/'+user+'/password').set(np);
+    ok.textContent='✅ 密碼已重置！';setTimeout(()=>showLogin(),2000);
+  } catch(e){err.textContent='操作失敗：'+e.message;}
+}
+// alias
+function doReset(){
+  if(document.getElementById('forgot-wrap').style.display!=='none'){doForgotReset();return;}
+  // reset scores
+  const game=buildGameData();
+  const b=game.bracket;
+  // clear scores/winners
+  if(b.semifinals){b.semifinals.forEach(sf=>{sf.scores=['',''];sf.winner=-1;});}
+  if(b.final){b.final.score1='';b.final.score2='';b.final.winner=-1;}
+  b.champion='';
+  if(b.schedule)b.schedule.forEach(g=>g.status='upcoming');
+  db.ref('/game').update({bracket:b}).then(()=>{
+    closeModal('reset-modal');
+    showSaveMsg('✅ 分數已重置！');
+    loadData();
+  });
+}
+
+// ── CHANGE PASS ──
+function showChangePass(){document.getElementById('cp-old').value='';document.getElementById('cp-new').value='';document.getElementById('cp-new2').value='';document.getElementById('cp-error').textContent='';openModal('changepass-modal');}
+async function doChangePass(){
+  const old=document.getElementById('cp-old').value;
+  const np=document.getElementById('cp-new').value;
+  const np2=document.getElementById('cp-new2').value;
+  const err=document.getElementById('cp-error');
+  if(np!==np2){err.textContent='兩次新密碼不一致';return;}
+  if(np.length<4){err.textContent='密碼至少4個字元';return;}
+  const snap=await db.ref('/accounts/'+currentUser).once('value');
+  if(snap.val()?.password!==old){err.textContent='舊密碼不正確';return;}
+  await db.ref('/accounts/'+currentUser+'/password').set(np);
+  closeModal('changepass-modal');showSaveMsg('✅ 密碼已更新！');
+}
+
+// ── LOGO ──
+function handleLogoUpload(e){
+  const file=e.target.files[0];if(!file)return;
+  if(file.size>1024*1024){alert('圖片太大！請選擇 1MB 以內的圖片');return;}
+  const reader=new FileReader();
+  reader.onload=ev=>{logoBase64=ev.target.result;const p=document.getElementById('logo-preview');p.src=logoBase64;p.classList.add('visible');};
+  reader.readAsDataURL(file);
+}
+function removeLogo(){logoBase64='';const p=document.getElementById('logo-preview');p.src='';p.classList.remove('visible');document.getElementById('logo-file').value='';}
+
+// ── HEADER LANG TABS ──
+function switchHeaderLang(l,el){
+  document.querySelectorAll('.lang-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('header-zh').style.display=l==='zh'?'block':'none';
+  document.getElementById('header-en').style.display=l==='en'?'block':'none';
+}
+
+// ── NAV ──
+function showAdmin(name){
+  const names=['header','bracket','schedule','info','notices','contacts','tools','stats','archives','accounts'];
+  document.querySelectorAll('.anav').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.toggle('active',s.id==='asec-'+name));
+  if(name==='stats')loadStats();
+  if(name==='archives')loadArchives();
+  if(name==='accounts'){accountsCache={};db.ref('/accounts').once('value',snap=>{accountsCache=snap.val()||{};renderAccountsList();});}
+}
+
+// ── WINNER ──
+function setWinner(match,w){
+  winners[match]=w;
+  const map={sf1:['sf1-w0','sf1-w1','sf1-wn'],sf2:['sf2-w0','sf2-w1','sf2-wn'],fin:['fin-w1','fin-w2','fin-wn']};
+  map[match].forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  const idx=match==='fin'?(w===1?0:w===2?1:2):(w===0?0:w===1?1:2);
+  document.getElementById(map[match][idx])?.classList.add('active');
+}
+
+// ── LISTS ──
+let scheduleData=[],infoData=[],noticesData=[],contactsData=[];
+function renderScheduleList(){
+  document.getElementById('schedule-list').innerHTML=scheduleData.map((g,i)=>`
+    <div class="list-item"><button class="remove-btn" onclick="removeItem('schedule',${i})">✕</button>
+      <div class="field-row">
+        <div class="field"><label>標籤</label><input value="${g.when||''}" oninput="scheduleData[${i}].when=this.value"/></div>
+        <div class="field"><label>時間</label><input value="${g.time||''}" oninput="scheduleData[${i}].time=this.value"/></div>
+        <div class="field"><label>場地</label><input value="${g.court||''}" oninput="scheduleData[${i}].court=this.value"/></div>
+      </div>
+      <div class="field"><label>場次名稱</label><input value="${g.name||''}" oninput="scheduleData[${i}].name=this.value"/></div>
+      <div class="field"><label>隊伍說明</label><input value="${g.teams||''}" oninput="scheduleData[${i}].teams=this.value"/></div>
+      <label style="font-size:11px;font-weight:700;color:var(--muted)">狀態</label>
+      <div class="status-btns">
+        <button class="status-btn ${g.status==='upcoming'?'active-upcoming':''}" onclick="setStatus(${i},'upcoming')">未開始</button>
+        <button class="status-btn ${g.status==='live'?'active-live':''}" onclick="setStatus(${i},'live')">進行中</button>
+        <button class="status-btn ${g.status==='done'?'active-done':''}" onclick="setStatus(${i},'done')">完賽</button>
+      </div>
+    </div>`).join('');
+}
+function setStatus(i,s){scheduleData[i].status=s;renderScheduleList();}
+function addSchedule(){scheduleData.push({when:'',time:'',court:'',name:'',teams:'',status:'upcoming'});renderScheduleList();}
+function renderInfoList(){
+  document.getElementById('info-list').innerHTML=infoData.map((item,i)=>`
+    <div class="list-item"><button class="remove-btn" onclick="removeItem('info',${i})">✕</button>
+      <div class="field-row">
+        <div class="field" style="max-width:70px"><label>Emoji</label><input value="${item.icon||''}" oninput="infoData[${i}].icon=this.value"/></div>
+        <div class="field"><label>標籤(中)</label><input value="${item.label||''}" oninput="infoData[${i}].label=this.value"/></div>
+        <div class="field"><label>Label(EN)</label><input value="${item.labelEn||''}" oninput="infoData[${i}].labelEn=this.value" placeholder="(EN)"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>內容(中)</label><input value="${item.value||''}" oninput="infoData[${i}].value=this.value"/></div>
+        <div class="field"><label>Value(EN)</label><input value="${item.valueEn||''}" oninput="infoData[${i}].valueEn=this.value" placeholder="(EN)"/></div>
+      </div>
+      <div class="field"><label>補充說明</label><input value="${item.sub||''}" oninput="infoData[${i}].sub=this.value"/></div>
+    </div>`).join('');
+}
+function addInfo(){infoData.push({icon:'📌',label:'',labelEn:'',value:'',valueEn:'',sub:''});renderInfoList();}
+function renderNoticesList(){
+  document.getElementById('notices-list').innerHTML=noticesData.map((n,i)=>`
+    <div class="list-item"><button class="remove-btn" onclick="removeItem('notices',${i})">✕</button>
+      <div class="field"><label>時間標籤</label><input value="${n.time||''}" oninput="noticesData[${i}].time=this.value"/></div>
+      <div class="field-row">
+        <div class="field"><label>公告(中)</label><input value="${n.text||''}" oninput="noticesData[${i}].text=this.value"/></div>
+        <div class="field"><label>Announcement(EN)</label><input value="${n.textEn||''}" oninput="noticesData[${i}].textEn=this.value" placeholder="(EN)"/></div>
+      </div>
+    </div>`).join('');
+}
+function addNotice(){noticesData.push({time:'',text:'',textEn:''});renderNoticesList();}
+function renderContactsList(){
+  document.getElementById('contacts-list').innerHTML=contactsData.map((c,i)=>`
+    <div class="list-item"><button class="remove-btn" onclick="removeItem('contacts',${i})">✕</button>
+      <div class="field-row">
+        <div class="field" style="max-width:70px"><label>Emoji</label><input value="${c.icon||''}" oninput="contactsData[${i}].icon=this.value"/></div>
+        <div class="field"><label>標籤(中)</label><input value="${c.label||''}" oninput="contactsData[${i}].label=this.value"/></div>
+        <div class="field"><label>Label(EN)</label><input value="${c.labelEn||''}" oninput="contactsData[${i}].labelEn=this.value"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>姓名</label><input value="${c.name||''}" oninput="contactsData[${i}].name=this.value"/></div>
+        <div class="field"><label>聯絡方式</label><input value="${c.contact||''}" oninput="contactsData[${i}].contact=this.value"/></div>
+      </div>
+    </div>`).join('');
+}
+function addContact(){contactsData.push({icon:'👤',label:'',labelEn:'',name:'',contact:''});renderContactsList();}
+function removeItem(type,i){
+  if(type==='schedule')scheduleData.splice(i,1),renderScheduleList();
+  else if(type==='info')infoData.splice(i,1),renderInfoList();
+  else if(type==='notices')noticesData.splice(i,1),renderNoticesList();
+  else if(type==='contacts')contactsData.splice(i,1),renderContactsList();
+}
+
+// ── STATS ──
+function loadStats(){
+  db.ref('/stats').once('value',snap=>{
+    const s=snap.val()||{};
+    document.getElementById('stat-visits').textContent=s.visits||0;
+    document.getElementById('stat-bracket').textContent=s.tabs?.bracket||0;
+    document.getElementById('stat-info').textContent=s.tabs?.info||0;
+    document.getElementById('stat-total').textContent=((s.tabs?.bracket||0)+(s.tabs?.info||0));
+  });
+}
+function doResetStats(){db.ref('/stats').remove().then(()=>{closeModal('resetstats-modal');loadStats();showSaveMsg('✅ 統計已清除');});}
+
+// ── ARCHIVE ──
+function doArchive(){
+  const name=document.getElementById('archive-name').value.trim();
+  if(!name){document.getElementById('archive-msg').style.color='var(--red)';document.getElementById('archive-msg').textContent='請輸入封存名稱';return;}
+  db.ref('/game').once('value',snap=>{
+    const data=snap.val()||{};
+    const key=Date.now();
+    db.ref('/archives/'+key).set({name,timestamp:key,data}).then(()=>{
+      document.getElementById('archive-msg').style.color='var(--green)';
+      document.getElementById('archive-msg').textContent='✅ 封存成功！';
+      document.getElementById('archive-name').value='';
+      loadArchives();
+      setTimeout(()=>document.getElementById('archive-msg').textContent='',3000);
+    });
+  });
+}
+function loadArchives(){
+  db.ref('/archives').once('value',snap=>{
+    const el=document.getElementById('archives-list');
+    const data=snap.val();
+    if(!data){el.innerHTML='<p style="color:var(--muted);font-size:13px">尚無封存紀錄</p>';return;}
+    const items=Object.entries(data).sort((a,b)=>b[0]-a[0]);
+    el.innerHTML=items.map(([k,v])=>`
+      <div class="archive-item">
+        <div style="flex:1">
+          <div class="archive-name">${v.name||'未命名活動'}</div>
+          <div class="archive-champ">🏆 冠軍：${v.data?.bracket?.champion||'未定'}</div>
+          <div class="archive-date">${new Date(v.timestamp).toLocaleDateString('zh-TW')}</div>
+        </div>
+        <button class="btn-sm btn-sm-red" onclick="deleteArchive('${k}')">刪除</button>
+      </div>`).join('');
+  });
+}
+async function deleteArchive(k){if(!confirm('確定刪除此封存紀錄？'))return;await db.ref('/archives/'+k).remove();loadArchives();}
+
+// ── ACCOUNTS ──
+function renderAccountsList(){
+  const el=document.getElementById('accounts-list');
+  const keys=Object.keys(accountsCache);
+  if(!keys.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">尚無帳號</p>';return;}
+  el.innerHTML=keys.map(u=>`
+    <div class="account-item">
+      <div class="account-avatar">${u[0].toUpperCase()}</div>
+      <div class="account-info"><div class="account-username">${u}</div><div class="account-role">${u===currentUser?'目前登入':'工作人員'}</div></div>
+      <div>${u!==currentUser?`<button class="btn-sm btn-sm-red" onclick="deleteAccount('${u}')">刪除</button>`:'<span style="font-size:11px;color:var(--muted)">（本人）</span>'}</div>
+    </div>`).join('');
+}
+async function addAccount(){
+  const u=document.getElementById('new-user').value.trim();
+  const p=document.getElementById('new-pass').value;
+  const msg=document.getElementById('add-account-msg');
+  if(!u||!p){msg.style.color='var(--red)';msg.textContent='請填寫帳號和密碼';return;}
+  if(accountsCache[u]){msg.style.color='var(--red)';msg.textContent='帳號已存在';return;}
+  await db.ref('/accounts/'+u).set({password:p});
+  accountsCache[u]={password:p};renderAccountsList();
+  document.getElementById('new-user').value='';document.getElementById('new-pass').value='';
+  msg.style.color='var(--green)';msg.textContent='✅ 帳號已新增';setTimeout(()=>msg.textContent='',2000);
+}
+let deleteTarget='';
+function deleteAccount(u){deleteTarget=u;document.getElementById('delete-username').textContent=u;openModal('delete-modal');}
+async function confirmDelete(){await db.ref('/accounts/'+deleteTarget).remove();delete accountsCache[deleteTarget];renderAccountsList();closeModal('delete-modal');showSaveMsg('✅ 帳號已刪除');}
+async function saveMasterCode(){
+  const c=document.getElementById('master-code-input').value;if(!c)return;
+  await db.ref('/masterCode').set(c);
+  document.getElementById('master-msg').textContent='✅ 重置碼已儲存';
+  document.getElementById('master-code-input').value='';
+  setTimeout(()=>document.getElementById('master-msg').textContent='',2000);
+}
+
+// ── MODAL ──
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ── LOAD ──
+function loadData(){
+  db.ref('/').once('value',snap=>{
+    const d=snap.val()||{};
+    const g=d.game||{};
+    if(g.header){
+      document.getElementById('h-badge').value=g.header.badge||'';
+      document.getElementById('h-titleHL').value=g.header.titleHighlight||'';
+      document.getElementById('h-titleRest').value=g.header.titleRest||'';
+      document.getElementById('h-subtitle').value=g.header.subtitle||'';
+      document.getElementById('h-footer').value=g.header.footer||'';
+      document.getElementById('h-badgeEn').value=g.header.badgeEn||'';
+      document.getElementById('h-titleEn').value=g.header.titleEn||'';
+      document.getElementById('h-subtitleEn').value=g.header.subtitleEn||'';
+      if(g.header.logoBase64){logoBase64=g.header.logoBase64;const p=document.getElementById('logo-preview');p.src=logoBase64;p.classList.add('visible');}
+    }
+    if(g.bracket){
+      const sf=g.bracket.semifinals||[];
+      if(sf[0]){
+        document.getElementById('sf1-t0-name').value=sf[0].teams?.[0]?.name||'';
+        document.getElementById('sf1-t0-emoji').value=sf[0].teams?.[0]?.emoji||'';
+        document.getElementById('sf1-t1-name').value=sf[0].teams?.[1]?.name||'';
+        document.getElementById('sf1-t1-emoji').value=sf[0].teams?.[1]?.emoji||'';
+        document.getElementById('sf1-s0').value=sf[0].scores?.[0]||'';
+        document.getElementById('sf1-s1').value=sf[0].scores?.[1]||'';
+        setWinner('sf1',sf[0].winner??-1);
+      }
+      if(sf[1]){
+        document.getElementById('sf2-t0-name').value=sf[1].teams?.[0]?.name||'';
+        document.getElementById('sf2-t0-emoji').value=sf[1].teams?.[0]?.emoji||'';
+        document.getElementById('sf2-t1-name').value=sf[1].teams?.[1]?.name||'';
+        document.getElementById('sf2-t1-emoji').value=sf[1].teams?.[1]?.emoji||'';
+        document.getElementById('sf2-s0').value=sf[1].scores?.[0]||'';
+        document.getElementById('sf2-s1').value=sf[1].scores?.[1]||'';
+        setWinner('sf2',sf[1].winner??-1);
+      }
+      if(g.bracket.final){
+        document.getElementById('fin-t1').value=g.bracket.final.team1?.name||'';
+        document.getElementById('fin-t2').value=g.bracket.final.team2?.name||'';
+        document.getElementById('fin-s1').value=g.bracket.final.score1||'';
+        document.getElementById('fin-s2').value=g.bracket.final.score2||'';
+        setWinner('fin',g.bracket.final.winner??-1);
+      }
+      document.getElementById('champ').value=g.bracket.champion||'';
+    }
+    scheduleData=g.bracket?.schedule||[];
+    infoData=g.info||[];noticesData=g.notices||[];contactsData=g.contacts||[];
+    renderScheduleList();renderInfoList();renderNoticesList();renderContactsList();
+    accountsCache=d.accounts||{};renderAccountsList();
+  });
+}
+
+// ── BUILD DATA ──
+function buildGameData(){
+  return{
+    header:{
+      badge:document.getElementById('h-badge').value,
+      titleHighlight:document.getElementById('h-titleHL').value,
+      titleRest:document.getElementById('h-titleRest').value,
+      subtitle:document.getElementById('h-subtitle').value,
+      footer:document.getElementById('h-footer').value,
+      badgeEn:document.getElementById('h-badgeEn').value,
+      titleEn:document.getElementById('h-titleEn').value,
+      subtitleEn:document.getElementById('h-subtitleEn').value,
+      logoBase64:logoBase64||''
+    },
+    bracket:{
+      semifinals:[
+        {teams:[{name:document.getElementById('sf1-t0-name').value,emoji:document.getElementById('sf1-t0-emoji').value},{name:document.getElementById('sf1-t1-name').value,emoji:document.getElementById('sf1-t1-emoji').value}],scores:[document.getElementById('sf1-s0').value,document.getElementById('sf1-s1').value],winner:winners.sf1},
+        {teams:[{name:document.getElementById('sf2-t0-name').value,emoji:document.getElementById('sf2-t0-emoji').value},{name:document.getElementById('sf2-t1-name').value,emoji:document.getElementById('sf2-t1-emoji').value}],scores:[document.getElementById('sf2-s0').value,document.getElementById('sf2-s1').value],winner:winners.sf2}
+      ],
+      final:{team1:{name:document.getElementById('fin-t1').value},team2:{name:document.getElementById('fin-t2').value},score1:document.getElementById('fin-s1').value,score2:document.getElementById('fin-s2').value,winner:winners.fin},
+      champion:document.getElementById('champ').value,
+      schedule:scheduleData
+    },
+    info:infoData,notices:noticesData,contacts:contactsData
+  };
+}
+
+// ── SAVE ──
+function saveAll(){
+  const data=buildGameData();
+  db.ref('/game').set(data).then(()=>showSaveMsg('✅ 已儲存並發布！')).catch(e=>showSaveMsg('❌ 失敗：'+e.message));
+}
+
+function showSaveMsg(msg){
+  const el=document.getElementById('save-msg');
+  el.style.color=msg.startsWith('✅')?'var(--green)':'var(--red)';
+  el.textContent=msg;setTimeout(()=>el.textContent='',3000);
+}
+
+// 初始化預設帳號
+db.ref('/accounts').once('value',snap=>{
+  if(!snap.val())db.ref('/accounts').set({staff:{password:'basketball2026'},admin:{password:'admin8888'}});
+});
+</script>
+</body>
+</html>

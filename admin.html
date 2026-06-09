@@ -371,18 +371,23 @@ let accountsCache={};
 let logoBase64='';
 let matchesData=[];
 
+const ROUND_LABELS=['','十二強','八強','準決賽','冠軍賽','決賽'];
+
 function renderMatchesList(){
   const el=document.getElementById('matches-list');
   if(!matchesData.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:12px 0">尚未新增場次，點下方按鈕新增</div>';return;}
   el.innerHTML=matchesData.map((m,i)=>`
     <div class="list-item">
       <button class="remove-btn" onclick="removeMatch(${i})">✕</button>
-      <div class="field-row">
-        <div class="field"><label>場次名稱</label>
-          <input value="${m.name||''}" oninput="matchesData[${i}].name=this.value" placeholder="八強、準決賽、決賽..."/>
+      <div class="field-row" style="align-items:flex-end">
+        <div class="field"><label>場次名稱（顯示在樹狀圖上方）</label>
+          <input value="${m.name||''}" oninput="matchesData[${i}].name=this.value" placeholder="例如：八強第1場"/>
         </div>
-        <div class="field" style="max-width:90px"><label>輪次（第幾輪）</label>
-          <input type="number" min="1" value="${m.round||1}" oninput="matchesData[${i}].round=parseInt(this.value)||1" placeholder="1"/>
+        <div class="field" style="max-width:130px">
+          <label>🎯 所在輪次</label>
+          <select onchange="matchesData[${i}].round=parseInt(this.value);renderMatchesList()" style="padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:100%;font-family:inherit;outline:none;background:#fff">
+            ${[1,2,3,4,5].map(r=>`<option value="${r}" ${(m.round||1)===r?'selected':''}>${r}輪 － ${ROUND_LABELS[r]||'第'+r+'輪'}</option>`).join('')}
+          </select>
         </div>
       </div>
       <div class="team-grid">

@@ -12,15 +12,26 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--dark);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh;}
 .page-wrap{max-width:680px;margin:0 auto;}
-header{background:linear-gradient(135deg,#0A0A0F 0%,#1a0a00 50%,#0A0A0F 100%);border-bottom:2px solid var(--orange);padding:20px 16px 16px;text-align:center;position:relative;overflow:hidden;}
-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,107,0,0.15) 0%,transparent 70%);pointer-events:none;}
-.lang-btn{position:absolute;top:14px;right:14px;background:rgba(255,107,0,0.15);border:1px solid var(--orange);color:var(--orange);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;z-index:2;letter-spacing:1px;}
-.header-badge{display:inline-block;background:var(--orange);color:#fff;font-size:10px;font-weight:900;letter-spacing:3px;padding:3px 12px;border-radius:20px;margin-bottom:10px;}
-.header-logo{width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--orange);margin-bottom:8px;display:none;}
-.header-logo.visible{display:inline-block;}
-header h1{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:4px;color:#fff;line-height:1;text-shadow:0 0 30px rgba(255,107,0,0.5);}
-header h1 span{color:var(--orange);}
-.header-sub{color:var(--muted);font-size:12px;margin-top:6px;letter-spacing:1px;}
+/* ── HEADER ── */
+header{position:relative;overflow:hidden;border-bottom:3px solid var(--orange);background:linear-gradient(135deg,#0A0A0F 0%,#1a0a00 50%,#0A0A0F 100%);}
+.header-org-bar{font-size:10px;color:rgba(255,255,255,0.6);text-align:center;padding:6px 48px;border-bottom:1px solid rgba(255,107,0,0.2);letter-spacing:0.5px;line-height:1.6;background:rgba(0,0,0,0.3);}
+.header-org-bar:empty{display:none;}
+.header-body{display:flex;align-items:center;justify-content:space-between;padding:16px 8px 20px;position:relative;z-index:1;min-height:160px;}
+.header-left-img{width:28%;display:flex;align-items:flex-end;justify-content:center;flex-shrink:0;}
+.header-left-img img{max-width:100%;max-height:150px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));}
+.header-left-img img[src=""],
+.header-right-img img[src=""]{display:none;}
+.header-right-img{width:28%;display:flex;align-items:flex-end;justify-content:center;flex-shrink:0;}
+.header-right-img img{max-width:100%;max-height:150px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));}
+.header-center{flex:1;text-align:center;padding:0 8px;}
+.header-badge{display:inline-block;background:var(--orange);color:#fff;font-size:10px;font-weight:900;letter-spacing:2px;padding:3px 14px;border-radius:20px;margin-bottom:8px;}
+.header-badge:empty{display:none;}
+#pub-title{margin:0 0 6px;line-height:1.1;text-shadow:0 2px 20px rgba(0,0,0,0.5);}
+.header-sub{font-size:12px;margin-top:4px;letter-spacing:1px;}
+.header-sub:empty{display:none;}
+.header-venue{display:inline-block;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:12px;font-weight:700;padding:4px 14px;border-radius:4px;margin-top:6px;}
+.header-venue:empty{display:none;}
+.lang-btn{position:absolute;top:10px;right:10px;background:rgba(255,107,0,0.15);border:1px solid var(--orange);color:var(--orange);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;cursor:pointer;z-index:10;letter-spacing:1px;}
 .live-dot{display:inline-flex;align-items:center;gap:5px;background:rgba(255,68,102,0.15);border:1px solid var(--red);color:var(--red);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-top:8px;}
 .live-dot::before{content:'';width:6px;height:6px;background:var(--red);border-radius:50%;animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
@@ -98,13 +109,29 @@ footer{text-align:center;padding:16px;color:var(--muted);font-size:10px;border-t
 </style>
 </head>
 <body>
-<header>
+<header id="pub-header-wrap">
   <button class="lang-btn" onclick="toggleLang()" id="lang-toggle">EN</button>
-  <div class="header-badge" id="pub-badge">2026 SUMMER</div>
-  <img class="header-logo" id="pub-logo" src="" alt="logo" />
-  <h1 id="pub-title">🏀 <span>籃球</span>錦標賽</h1>
-  <div class="header-sub" id="pub-subtitle">BASKETBALL CHAMPIONSHIP · 掃碼即時查看賽況</div>
-  <div class="live-dot" id="live-label">LIVE 即時更新中</div>
+  <!-- 頂部單位資訊列 -->
+  <div class="header-org-bar" id="pub-org-bar"></div>
+  <!-- 主視覺區 -->
+  <div class="header-body">
+    <!-- 左側圖片 -->
+    <div class="header-left-img">
+      <img id="pub-left-img" src="" alt="" />
+    </div>
+    <!-- 中間文字 -->
+    <div class="header-center">
+      <div class="header-badge" id="pub-badge"></div>
+      <h1 id="pub-title"></h1>
+      <div class="header-sub" id="pub-subtitle"></div>
+      <div class="header-venue" id="pub-venue"></div>
+      <div class="live-dot" id="live-label" style="margin-top:10px">LIVE 即時更新中</div>
+    </div>
+    <!-- 右側圖片 -->
+    <div class="header-right-img">
+      <img id="pub-right-img" src="" alt="" />
+    </div>
+  </div>
 </header>
 <div class="page-wrap">
 <nav class="tabs">
@@ -161,19 +188,56 @@ function toggleLang(){
 function applyLang(){
   document.querySelectorAll('[data-zh]').forEach(el=>{el.textContent=lang==='zh'?el.dataset.zh:el.dataset.en;});
   const d=gameData.header||{};
-  if(lang==='en'&&d.badgeEn) document.getElementById('pub-badge').textContent=d.badgeEn;
-  else document.getElementById('pub-badge').textContent=d.badge||'';
-  if(lang==='en'&&d.titleEn) document.getElementById('pub-title').innerHTML=d.titleEn;
-  else document.getElementById('pub-title').innerHTML='🏀 <span>'+(d.titleHighlight||'籃球')+'</span>'+(d.titleRest||'錦標賽');
-  if(lang==='en'&&d.subtitleEn) document.getElementById('pub-subtitle').textContent=d.subtitleEn;
-  else document.getElementById('pub-subtitle').textContent=d.subtitle||'';
+
+  // Org bar
+  const orgEl=document.getElementById('pub-org-bar');
+  if(orgEl) orgEl.innerHTML=d.orgBar||'';
+
+  // Badge
+  const badgeEl=document.getElementById('pub-badge');
+  if(badgeEl) badgeEl.textContent=lang==='en'&&d.badgeEn?d.badgeEn:(d.badge||'');
+
+  // Title
+  const titleEl=document.getElementById('pub-title');
+  if(titleEl){
+    titleEl.innerHTML=lang==='en'&&d.titleEn?d.titleEn:(d.title||'🏀 籃球錦標賽');
+    titleEl.style.fontFamily=d.titleFont==='bebas'?'"Bebas Neue",sans-serif':'"Noto Sans TC",sans-serif';
+    titleEl.style.fontSize=(d.titleSize||44)+'px';
+    titleEl.style.fontWeight=d.titleFont==='bebas'?'400':'900';
+    titleEl.style.color=d.titleColor||'#FFFFFF';
+    titleEl.style.letterSpacing=d.titleFont==='bebas'?'3px':'1px';
+  }
+
+  // Subtitle
+  const subEl=document.getElementById('pub-subtitle');
+  if(subEl){
+    subEl.textContent=lang==='en'&&d.subtitleEn?d.subtitleEn:(d.subtitle||'');
+    subEl.style.color=d.subtitleColor||'#aaaaaa';
+    subEl.style.fontSize=(d.subtitleSize||12)+'px';
+  }
+
+  // Venue tag
+  const venueEl=document.getElementById('pub-venue');
+  if(venueEl) venueEl.textContent=d.venue||'';
+
+  // Background
+  const hdr=document.getElementById('pub-header-wrap');
+  if(d.bgColor) hdr.style.background=d.bgColor;
+  else hdr.style.background='linear-gradient(135deg,#0A0A0F 0%,#1a0a00 50%,#0A0A0F 100%)';
+
+  // Left/Right images
+  const lImg=document.getElementById('pub-left-img');
+  const rImg=document.getElementById('pub-right-img');
+  if(lImg) lImg.src=d.leftImgBase64||'';
+  if(rImg) rImg.src=d.rightImgBase64||'';
+
   document.getElementById('live-label').textContent=lang==='zh'?'LIVE 即時更新中':'LIVE Updating';
   document.getElementById('ct-bracket').innerHTML=lang==='zh'?'🏆 淘汰賽對戰圖':'🏆 Elimination Bracket';
   document.getElementById('ct-schedule').innerHTML=lang==='zh'?'📋 晉級賽程':'📋 Schedule';
   document.getElementById('ct-info').innerHTML=lang==='zh'?'ℹ️ 活動基本資訊':'ℹ️ Event Info';
   document.getElementById('ct-notices').innerHTML=lang==='zh'?'📢 最新公告':'📢 Announcements';
   document.getElementById('ct-contacts').innerHTML=lang==='zh'?'📞 聯絡資訊':'📞 Contacts';
-  document.title=lang==='en'&&d.titleEn?d.titleEn.replace(/<[^>]+>/g,''):((d.titleHighlight||'籃球')+(d.titleRest||'錦標賽'));
+  document.title=(d.title||'籃球錦標賽').replace(/<[^>]+>/g,'');
 }
 
 // ── TAB ──
@@ -262,18 +326,18 @@ function renderBracket(b){
           <div class="bk-team ${bWin?'winner':''}" style="height:${CARD_H/2}px">${bE}${bName}<span class="bk-score">${m.scoreB||''}</span></div>
         </div>`;
 
-        // Draw connector to next round
-        if(ri<roundNums.length-1){
+        // Draw connector to next round (only if partner exists)
+        if(ri<roundNums.length-1 && mi%2===0){
           const myCenterY=cardTop+CARD_H/2;
-          const partnerIdx=mi%2===0?mi+1:mi-1;
-          const partnerSlotTop=partnerIdx*factor*UNIT;
-          const partnerSlotH=factor*UNIT-GAP;
-          const partnerCardTop=partnerSlotTop+(partnerSlotH-CARD_H)/2;
-          const partnerCenterY=partnerCardTop+CARD_H/2;
-          const midY=(myCenterY+partnerCenterY)/2;
-          const rightX=COL_W-8; // right edge of card = 8+120
-          // Only draw connector for even index (top of pair)
-          if(mi%2===0){
+          const partnerIdx=mi+1;
+          // Only draw if partner match exists in this round
+          if(partnerIdx<rMatches.length){
+            const partnerSlotTop=partnerIdx*factor*UNIT;
+            const partnerSlotH=factor*UNIT-GAP;
+            const partnerCardTop=partnerSlotTop+(partnerSlotH-CARD_H)/2;
+            const partnerCenterY=partnerCardTop+CARD_H/2;
+            const midY=(myCenterY+partnerCenterY)/2;
+            const rightX=COL_W-8;
             html+=`<svg style="position:absolute;top:0;left:0;width:${COL_W+24}px;height:${colBodyH}px;overflow:visible;pointer-events:none">
               <line x1="${rightX}" y1="${myCenterY}" x2="${rightX+12}" y2="${myCenterY}" stroke="#FF6B00" stroke-width="1.5" opacity="0.6"/>
               <line x1="${rightX}" y1="${partnerCenterY}" x2="${rightX+12}" y2="${partnerCenterY}" stroke="#FF6B00" stroke-width="1.5" opacity="0.6"/>
@@ -289,9 +353,9 @@ function renderBracket(b){
       if(ri<roundNums.length-1) html+=`<div style="width:24px;flex-shrink:0"></div>`;
     });
 
-    // Champion
+    // Champion box centered vertically
     if(champ){
-      html+=`<div style="display:flex;align-items:center;padding-top:30px;margin-left:12px">
+      html+=`<div style="display:flex;align-items:center;height:${totalH+30}px;margin-left:20px;padding-top:28px">
         <div class="bk-champ"><div class="bk-champ-crown">👑</div><div class="bk-champ-label">CHAMPION</div><div class="bk-champ-name">${champ}</div></div>
       </div>`;
     }

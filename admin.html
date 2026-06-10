@@ -161,36 +161,85 @@ body{background:var(--bg);color:var(--dark);font-family:'Noto Sans TC',sans-seri
     <!-- 主視覺 -->
     <div class="admin-section active" id="asec-header">
       <div class="section-title">🎨 主視覺設定</div>
+
       <div class="card">
-        <div class="card-label">活動 LOGO</div>
-        <img class="logo-preview" id="logo-preview" src="" alt="logo"/>
-        <div class="field"><label>上傳 LOGO（支援 JPG/PNG，建議正方形）</label>
-          <input type="file" id="logo-file" accept="image/*" onchange="handleLogoUpload(event)"/>
+        <div class="card-label">📷 左側圖片（籃球框、吉祥物等）</div>
+        <img id="left-img-preview" style="max-height:100px;max-width:100%;object-fit:contain;display:none;margin-bottom:8px;border-radius:8px"/>
+        <div class="field"><label>上傳左側圖片（PNG 透明背景效果最好）</label>
+          <input type="file" id="left-img-file" accept="image/*" onchange="handleImgUpload(event,'left')"/>
         </div>
-        <button class="btn btn-danger" onclick="removeLogo()" style="font-size:12px;padding:6px 12px">移除 LOGO</button>
+        <button class="btn btn-danger" onclick="removeImg('left')" style="font-size:12px;padding:5px 10px">移除左側圖片</button>
       </div>
+
       <div class="card">
-        <div class="card-label">標題設定</div>
-        <div class="lang-tab-row">
-          <div class="lang-tab active" onclick="switchHeaderLang('zh',this)">中文</div>
-          <div class="lang-tab" onclick="switchHeaderLang('en',this)">English</div>
+        <div class="card-label">📷 右側圖片（運動員、人物等）</div>
+        <img id="right-img-preview" style="max-height:100px;max-width:100%;object-fit:contain;display:none;margin-bottom:8px;border-radius:8px"/>
+        <div class="field"><label>上傳右側圖片（PNG 透明背景效果最好）</label>
+          <input type="file" id="right-img-file" accept="image/*" onchange="handleImgUpload(event,'right')"/>
         </div>
-        <div id="header-zh">
-          <div class="field"><label>活動標籤（橘色小標）</label><input id="h-badge" placeholder="2026 SUMMER"/></div>
-          <div class="field-row">
-            <div class="field"><label>標題橘色字</label><input id="h-titleHL" placeholder="籃球"/></div>
-            <div class="field"><label>標題白色字</label><input id="h-titleRest" placeholder="錦標賽"/></div>
+        <button class="btn btn-danger" onclick="removeImg('right')" style="font-size:12px;padding:5px 10px">移除右側圖片</button>
+      </div>
+
+      <div class="card">
+        <div class="card-label">📝 頂部單位資訊列（可空）</div>
+        <div class="field"><label>單位資訊（顯示在 header 最頂部小字）</label>
+          <input id="h-orgbar" placeholder="主辦單位：XXX · 協辦單位：XXX"/></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">✏️ 標題文字設定</div>
+        <div class="field"><label>活動標籤（橘色小標，可空）</label><input id="h-badge" placeholder="2026青春專案"/></div>
+        <div class="field"><label>主標題（大字）</label><textarea id="h-title" rows="2" placeholder="三對三籃球賽"></textarea></div>
+        <div class="field"><label>副標題（小字，可空）</label><input id="h-subtitle" placeholder="衝刺衝刺"/></div>
+        <div class="field"><label>場地標籤（黑底白字方框，可空）</label><input id="h-venue" placeholder="彰南國民運動中心"/></div>
+        <div class="field"><label>頁尾文字</label><input id="h-footer" placeholder="🏀 籃球錦標賽 · 技術支援：主辦單位"/></div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">🎨 樣式設定</div>
+        <div class="field-row">
+          <div class="field">
+            <label>字體選擇</label>
+            <select id="h-titleFont" style="padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:100%;font-family:inherit;outline:none;background:#fff">
+              <option value="noto">黑體（粗體中文）</option>
+              <option value="bebas">Bebas Neue（英文運動風）</option>
+            </select>
           </div>
-          <div class="field"><label>副標題</label><input id="h-subtitle" placeholder="掃碼即時查看賽況"/></div>
-          <div class="field"><label>頁尾文字</label><input id="h-footer" placeholder="🏀 籃球錦標賽 · 技術支援：主辦單位"/></div>
+          <div class="field" style="max-width:100px">
+            <label>字體大小 px</label>
+            <input type="number" id="h-titleSize" value="44" min="20" max="80"/>
+          </div>
         </div>
-        <div id="header-en" style="display:none">
-          <div class="field"><label>Badge (EN)</label><input id="h-badgeEn" placeholder="2026 SUMMER"/></div>
-          <div class="field"><label>Full Title HTML (EN)</label><input id="h-titleEn" placeholder="🏀 <span>Basketball</span> Championship"/></div>
-          <div class="field"><label>Subtitle (EN)</label><input id="h-subtitleEn" placeholder="Scan QR Code for live updates"/></div>
+        <div class="field-row">
+          <div class="field">
+            <label>標題顏色</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="color" id="h-titleColor" value="#FFFFFF" style="width:44px;height:36px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px"/>
+              <input id="h-titleColorHex" placeholder="#FFFFFF" style="flex:1;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px" oninput="document.getElementById('h-titleColor').value=this.value"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>副標題顏色</label>
+            <input type="color" id="h-subtitleColor" value="#aaaaaa" style="width:44px;height:36px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>背景顏色</label>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <input type="color" id="h-bgColorPick" value="#0A0A0F" style="width:44px;height:36px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px" oninput="document.getElementById('h-bgColor').value=this.value"/>
+            <input id="h-bgColor" placeholder="linear-gradient(135deg,#4a0080 0%,#800040 100%)" style="flex:1;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px"/>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn" style="font-size:11px;padding:5px 10px;background:#0A0A0F;color:#fff;border:1px solid #333" onclick="setBg('linear-gradient(135deg,#0A0A0F 0%,#1a0a00 50%,#0A0A0F 100%)')">🖤 深黑橘</button>
+            <button class="btn" style="font-size:11px;padding:5px 10px;background:#4a0080;color:#fff" onclick="setBg('linear-gradient(135deg,#4a0080 0%,#7b0090 50%,#4a0080 100%)')">💜 紫色</button>
+            <button class="btn" style="font-size:11px;padding:5px 10px;background:#003580;color:#fff" onclick="setBg('linear-gradient(135deg,#003580 0%,#0050c8 50%,#003580 100%)')">💙 深藍</button>
+            <button class="btn" style="font-size:11px;padding:5px 10px;background:#006400;color:#fff" onclick="setBg('linear-gradient(135deg,#004d00 0%,#007000 50%,#004d00 100%)')">💚 深綠</button>
+            <button class="btn" style="font-size:11px;padding:5px 10px;background:#8B0000;color:#fff" onclick="setBg('linear-gradient(135deg,#8B0000 0%,#cc2200 50%,#8B0000 100%)')">❤️ 深紅</button>
+          </div>
         </div>
       </div>
     </div>
+
 
     <!-- 晉級賽 -->
     <div class="admin-section" id="asec-bracket">
@@ -368,7 +417,7 @@ const db=firebase.database();
 
 let currentUser='';
 let accountsCache={};
-let logoBase64='';
+
 let matchesData=[];
 
 const ROUND_LABELS=['','十二強','八強','準決賽','冠軍賽','決賽'];
@@ -487,23 +536,28 @@ async function doChangePass(){
   closeModal('changepass-modal');showSaveMsg('✅ 密碼已更新！');
 }
 
-// ── LOGO ──
-function handleLogoUpload(e){
+// ── IMAGES ──
+let leftImgBase64='', rightImgBase64='';
+function handleImgUpload(e,side){
   const file=e.target.files[0];if(!file)return;
-  if(file.size>1024*1024){alert('圖片太大！請選擇 1MB 以內的圖片');return;}
+  if(file.size>1500*1024){alert('圖片太大！請選擇 1.5MB 以內的圖片');return;}
   const reader=new FileReader();
-  reader.onload=ev=>{logoBase64=ev.target.result;const p=document.getElementById('logo-preview');p.src=logoBase64;p.classList.add('visible');};
+  reader.onload=ev=>{
+    const data=ev.target.result;
+    const prev=document.getElementById(side+'-img-preview');
+    if(side==='left'){leftImgBase64=data;}else{rightImgBase64=data;}
+    prev.src=data;prev.style.display='block';
+  };
   reader.readAsDataURL(file);
 }
-function removeLogo(){logoBase64='';const p=document.getElementById('logo-preview');p.src='';p.classList.remove('visible');document.getElementById('logo-file').value='';}
-
-// ── HEADER LANG TABS ──
-function switchHeaderLang(l,el){
-  document.querySelectorAll('.lang-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('header-zh').style.display=l==='zh'?'block':'none';
-  document.getElementById('header-en').style.display=l==='en'?'block':'none';
+function removeImg(side){
+  if(side==='left'){leftImgBase64='';document.getElementById('left-img-preview').style.display='none';document.getElementById('left-img-file').value='';}
+  else{rightImgBase64='';document.getElementById('right-img-preview').style.display='none';document.getElementById('right-img-file').value='';}
 }
+function setBg(val){document.getElementById('h-bgColor').value=val;document.getElementById('h-bgColorPick').value='#000000';}
+
+// ── HEADER LANG TABS (removed - no longer needed) ──
+function switchHeaderLang(l,el){}
 
 // ── NAV ──
 function showAdmin(name){
@@ -680,15 +734,21 @@ function loadData(){
     const d=snap.val()||{};
     const g=d.game||{};
     if(g.header){
-      document.getElementById('h-badge').value=g.header.badge||'';
-      document.getElementById('h-titleHL').value=g.header.titleHighlight||'';
-      document.getElementById('h-titleRest').value=g.header.titleRest||'';
-      document.getElementById('h-subtitle').value=g.header.subtitle||'';
-      document.getElementById('h-footer').value=g.header.footer||'';
-      document.getElementById('h-badgeEn').value=g.header.badgeEn||'';
-      document.getElementById('h-titleEn').value=g.header.titleEn||'';
-      document.getElementById('h-subtitleEn').value=g.header.subtitleEn||'';
-      if(g.header.logoBase64){logoBase64=g.header.logoBase64;const p=document.getElementById('logo-preview');p.src=logoBase64;p.classList.add('visible');}
+      const h=g.header;
+      document.getElementById('h-badge').value=h.badge||'';
+      document.getElementById('h-title').value=h.title||'';
+      document.getElementById('h-subtitle').value=h.subtitle||'';
+      document.getElementById('h-venue').value=h.venue||'';
+      document.getElementById('h-footer').value=h.footer||'';
+      document.getElementById('h-orgbar').value=h.orgBar||'';
+      document.getElementById('h-titleFont').value=h.titleFont||'noto';
+      document.getElementById('h-titleSize').value=h.titleSize||44;
+      document.getElementById('h-titleColor').value=h.titleColor||'#FFFFFF';
+      document.getElementById('h-titleColorHex').value=h.titleColor||'#FFFFFF';
+      document.getElementById('h-subtitleColor').value=h.subtitleColor||'#aaaaaa';
+      document.getElementById('h-bgColor').value=h.bgColor||'';
+      if(h.leftImgBase64){leftImgBase64=h.leftImgBase64;const p=document.getElementById('left-img-preview');p.src=leftImgBase64;p.style.display='block';}
+      if(h.rightImgBase64){rightImgBase64=h.rightImgBase64;const p=document.getElementById('right-img-preview');p.src=rightImgBase64;p.style.display='block';}
     }
     if(g.bracket){
       matchesData=g.bracket.matches||[];
@@ -707,14 +767,18 @@ function buildGameData(){
   return{
     header:{
       badge:document.getElementById('h-badge').value,
-      titleHighlight:document.getElementById('h-titleHL').value,
-      titleRest:document.getElementById('h-titleRest').value,
+      title:document.getElementById('h-title').value,
       subtitle:document.getElementById('h-subtitle').value,
+      venue:document.getElementById('h-venue').value,
       footer:document.getElementById('h-footer').value,
-      badgeEn:document.getElementById('h-badgeEn').value,
-      titleEn:document.getElementById('h-titleEn').value,
-      subtitleEn:document.getElementById('h-subtitleEn').value,
-      logoBase64:logoBase64||''
+      orgBar:document.getElementById('h-orgbar').value,
+      titleFont:document.getElementById('h-titleFont').value,
+      titleSize:parseInt(document.getElementById('h-titleSize').value)||44,
+      titleColor:document.getElementById('h-titleColor').value,
+      subtitleColor:document.getElementById('h-subtitleColor').value,
+      bgColor:document.getElementById('h-bgColor').value,
+      leftImgBase64:leftImgBase64||'',
+      rightImgBase64:rightImgBase64||''
     },
     bracket:{
       matches:matchesData,

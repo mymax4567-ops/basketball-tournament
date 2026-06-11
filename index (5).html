@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>籃球錦標賽</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#13132a;font-family:'Noto Sans TC',sans-serif;}
+
+/* ══════════════════════════════════════
+   BANNER - 完全仿照圖二
+══════════════════════════════════════ */
+.banner{
+  position:relative;
+  background:linear-gradient(160deg,#7a0fa8 0%,#9b15c4 25%,#b020d0 50%,#9010b8 75%,#6a0a96 100%);
+  min-height:280px;
+  overflow:hidden;
+}
+
+/* 左邊斜紋黑條 */
+.stripe-left{
+  position:absolute;top:0;left:0;bottom:0;width:52px;z-index:3;
+  background:repeating-linear-gradient(
+    -45deg,
+    transparent 0,transparent 9px,
+    rgba(0,0,0,0.5) 9px,rgba(0,0,0,0.5) 18px
+  );
+}
+/* 右邊斜紋黑條 */
+.stripe-right{
+  position:absolute;top:0;right:0;bottom:0;width:52px;z-index:3;
+  background:repeating-linear-gradient(
+    -45deg,
+    transparent 0,transparent 9px,
+    rgba(0,0,0,0.5) 9px,rgba(0,0,0,0.5) 18px
+  );
+}
+
+/* 白色虛線圓弧裝飾 */
+.banner-svg{
+  position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;
+}
+
+/* 右下角漸層裝飾 */
+.banner-glow-br{
+  position:absolute;bottom:-60px;right:50px;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(200,50,200,0.25) 0%,transparent 70%);
+  z-index:1;pointer-events:none;
+}
+
+/* 三欄主體 */
+.banner-body{
+  position:relative;z-index:4;
+  display:flex;align-items:stretch;
+  min-height:280px;
+  padding:0 52px;
+}
+
+/* 左圖：籃球框 */
+.b-left{
+  width:260px;flex-shrink:0;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:16px 0 0;
+}
+.b-left img{
+  width:240px;max-height:260px;object-fit:contain;
+  filter:drop-shadow(0 6px 20px rgba(0,0,0,0.35));
+  display:block;
+}
+.b-left img[src=""]{display:none;}
+
+/* 中間文字 */
+.b-center{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:20px 8px;
+}
+.b-org{
+  color:rgba(255,255,255,0.75);font-size:12px;
+  letter-spacing:0.5px;margin-bottom:8px;line-height:1.7;
+}
+.b-org:empty{display:none;}
+.b-year{
+  color:#fff;font-size:18px;font-weight:700;
+  margin-bottom:4px;letter-spacing:1px;
+}
+.b-year:empty{display:none;}
+.b-title{
+  color:#FFE44D;
+  font-weight:900;line-height:1.1;
+  letter-spacing:4px;
+  text-shadow:2px 3px 0 rgba(0,0,0,0.4),0 0 30px rgba(255,220,0,0.3);
+  margin-bottom:14px;
+  font-size:60px;
+}
+.b-venue-box{
+  display:inline-block;
+  background:#0f0f0f;color:#fff;
+  font-size:15px;font-weight:700;
+  padding:7px 28px;border-radius:6px;
+  letter-spacing:2px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.4);
+}
+.b-venue-box:empty{display:none;}
+
+/* 右圖：運動員 */
+.b-right{
+  width:260px;flex-shrink:0;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:0 0 0;
+}
+.b-right img{
+  width:240px;max-height:280px;object-fit:contain;
+  object-position:bottom;
+  filter:drop-shadow(0 6px 20px rgba(0,0,0,0.35));
+  display:block;
+}
+.b-right img[src=""]{display:none;}
+
+.lang-btn{
+  position:absolute;top:12px;right:68px;z-index:10;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.4);
+  color:#fff;font-size:11px;font-weight:700;
+  padding:4px 12px;border-radius:20px;cursor:pointer;
+}
+
+/* ══════════════════════════════════════
+   TABS
+══════════════════════════════════════ */
+.tabs{
+  background:#0e0e20;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;justify-content:center;gap:0;
+}
+.tab{
+  padding:16px 56px;
+  font-size:15px;font-weight:700;
+  color:rgba(255,255,255,0.4);
+  cursor:pointer;
+  border-bottom:3px solid transparent;
+  transition:all 0.2s;
+  display:flex;align-items:center;gap:8px;
+}
+.tab.active{color:#FFD700;border-bottom-color:#FFD700;}
+.tab-icon{font-size:18px;}
+
+/* ══════════════════════════════════════
+   CONTENT
+══════════════════════════════════════ */
+.page-content{background:#13132a;min-height:500px;}
+.section{display:none;padding:24px 20px;max-width:1000px;margin:0 auto;}
+.section.active{display:block;}
+
+/* Card */
+.card{
+  background:#1a1a35;
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:12px;padding:20px;margin-bottom:16px;
+}
+.card-title{
+  font-size:13px;font-weight:700;
+  color:rgba(255,255,255,0.45);
+  letter-spacing:2px;
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:18px;
+}
+.card-title::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07);}
+
+/* ── BRACKET TREE ── */
+.bk-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;}
+.bk-wrap{display:inline-flex;align-items:flex-start;padding:4px;}
+.bk-col{display:flex;flex-direction:column;align-items:center;}
+.bk-round-lbl{
+  font-size:12px;font-weight:700;letter-spacing:2px;
+  color:#FFD700;text-transform:uppercase;
+  text-align:center;margin-bottom:12px;
+  white-space:nowrap;padding:0 8px;
+}
+.bk-col-body{position:relative;}
+.bk-match{
+  position:absolute;
+  background:#21213d;
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;width:135px;overflow:hidden;left:8px;
+}
+.bk-team{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 10px;font-size:12px;font-weight:700;
+  color:#ccc;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  white-space:nowrap;overflow:hidden;
+}
+.bk-team:last-child{border-bottom:none;}
+.bk-team.win{background:rgba(230,120,0,0.25);color:#FFB347;}
+.bk-pts{font-size:14px;font-weight:900;color:#FFB347;margin-left:4px;flex-shrink:0;}
+.bk-champ-box{
+  background:linear-gradient(135deg,rgba(255,215,0,0.18),rgba(180,80,0,0.15));
+  border:2px solid #FFD700;border-radius:12px;
+  padding:18px 14px;text-align:center;min-width:120px;
+}
+.bk-champ-box .crown{font-size:30px;display:block;margin-bottom:4px;}
+.bk-champ-box .lbl{
+  font-size:9px;letter-spacing:3px;color:#FFD700;
+  font-weight:700;display:block;margin-bottom:6px;
+}
+.bk-champ-box .name{
+  font-size:20px;font-weight:900;color:#FFD700;display:block;
+}
+
+/* Schedule */
+.game-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);gap:10px;}
+.game-row:last-child{border-bottom:none;}
+.g-time{min-width:50px;font-size:11px;color:rgba(255,255,255,0.35);font-weight:700;}
+.g-court{font-size:10px;color:rgba(255,255,255,0.25);}
+.g-name{flex:1;font-size:13px;font-weight:700;color:#ddd;}
+.g-status{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:700;}
+.s-done{background:rgba(0,180,130,0.12);color:#00C896;border:1px solid rgba(0,180,130,0.2);}
+.s-live{background:rgba(255,50,80,0.12);color:#FF4466;border:1px solid rgba(255,50,80,0.2);animation:pulse 1s infinite;}
+.s-soon{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.08);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* Info */
+.info-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);align-items:flex-start;}
+.info-row:last-child{border-bottom:none;}
+.info-ico{width:38px;height:38px;background:rgba(255,200,0,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.info-lbl{font-size:10px;color:rgba(255,255,255,0.3);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.info-val{font-size:14px;font-weight:700;color:#fff;margin-top:2px;}
+.info-note{font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px;}
+.notice-box{background:rgba(255,200,0,0.06);border-left:3px solid #FFD700;border-radius:0 8px 8px 0;padding:12px 14px;margin-bottom:10px;}
+.notice-when{font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:3px;}
+.notice-msg{font-size:13px;font-weight:700;color:#fff;}
+
+.loading{text-align:center;padding:40px;color:rgba(255,255,255,0.2);font-size:13px;}
+footer{text-align:center;padding:16px;color:rgba(255,255,255,0.2);font-size:10px;border-top:1px solid rgba(255,255,255,0.05);letter-spacing:1px;}
+
+/* Mobile */
+@media(max-width:640px){
+  .banner-body,.b-left,.b-right{flex-direction:column;}
+  .b-left,.b-right{width:90px;}
+  .b-left img,.b-right img{width:80px;max-height:120px;}
+  .b-title{font-size:36px;letter-spacing:2px;}
+  .stripe-left,.stripe-right{width:28px;}
+  .banner-body{padding:0 28px;}
+  .tab{padding:12px 20px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ BANNER ══ -->
+<div class="banner" id="pub-header-wrap">
+  <button class="lang-btn" onclick="toggleLang()" id="lang-toggle">EN</button>
+  <div class="stripe-left"></div>
+  <div class="stripe-right"></div>
+  <div class="banner-glow-br"></div>
+
+  <!-- SVG 虛線圓弧 -->
+  <svg class="banner-svg" viewBox="0 0 1400 280" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <!-- 左下角圓弧 -->
+    <circle cx="280" cy="340" r="200" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="7 7"/>
+    <circle cx="280" cy="340" r="260" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="1.5" stroke-dasharray="7 7"/>
+    <circle cx="280" cy="340" r="320" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5" stroke-dasharray="7 7"/>
+    <!-- 右下角圓弧 -->
+    <circle cx="1120" cy="340" r="180" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1.5" stroke-dasharray="7 7"/>
+    <circle cx="1120" cy="340" r="240" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1.5" stroke-dasharray="7 7"/>
+    <!-- 中央光暈 -->
+    <ellipse cx="700" cy="300" rx="400" ry="200" fill="rgba(255,255,255,0.02)"/>
+  </svg>
+
+  <div class="banner-body">
+    <!-- 左：籃球框 -->
+    <div class="b-left">
+      <img id="pub-left-img" src="" alt=""/>
+    </div>
+
+    <!-- 中：文字 -->
+    <div class="b-center">
+      <div class="b-org" id="pub-org-bar"></div>
+      <div class="b-year" id="pub-badge"></div>
+      <h1 class="b-title" id="pub-title">籃球錦標賽</h1>
+      <div><span class="b-venue-box" id="pub-venue"></span></div>
+    </div>
+
+    <!-- 右：運動員 -->
+    <div class="b-right">
+      <img id="pub-right-img" src="" alt=""/>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TABS ══ -->
+<nav class="tabs">
+  <div class="tab active" onclick="showTab('bracket')">
+    <span class="tab-icon">🏆</span><span id="ct-bracket">賽程賽果</span>
+  </div>
+  <div class="tab" onclick="showTab('info')">
+    <span class="tab-icon">📋</span><span id="ct-info">活動資訊</span>
+  </div>
+</nav>
+
+<!-- ══ CONTENT ══ -->
+<div class="page-content">
+  <!-- 晉級賽 -->
+  <div class="section active" id="section-bracket">
+    <div class="card">
+      <div class="card-title" id="ct-bk">🏆 淘汰賽賽程圖</div>
+      <div class="bk-scroll">
+        <div class="bk-wrap" id="bracket-display">
+          <div class="loading">載入中...</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" id="ct-sch">📋 晉級賽程</div>
+      <div id="bracket-schedule"><div class="loading">載入中...</div></div>
+    </div>
+  </div>
+
+  <!-- 活動資訊 -->
+  <div class="section" id="section-info">
+    <div class="card">
+      <div class="card-title">ℹ️ 活動基本資訊</div>
+      <div id="pub-info-list"><div class="loading">載入中...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📢 最新公告</div>
+      <div id="pub-notice-list"><div class="loading">目前無公告</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📞 聯絡資訊</div>
+      <div id="pub-contact-list"><div class="loading">載入中...</div></div>
+    </div>
+  </div>
+</div>
+
+<footer id="pub-footer">🏀 籃球錦標賽 · 技術支援：主辦單位</footer>
+
+<script>
+const firebaseConfig={apiKey:"AIzaSyAvXt3l1WIwuwzTEiK8f0pXtC73qyu8p28",authDomain:"funplay-f29f4.firebaseapp.com",databaseURL:"https://funplay-f29f4-default-rtdb.firebaseio.com",projectId:"funplay-f29f4",storageBucket:"funplay-f29f4.firebasestorage.app",messagingSenderId:"931596968438",appId:"1:931596968438:web:c47a7c31f4cc3b4adee7d7"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+let lang='zh',gameData={};
+try{db.ref('/stats/visits').transaction(v=>(v||0)+1);}catch(e){}
+
+function toggleLang(){lang=lang==='zh'?'en':'zh';document.getElementById('lang-toggle').textContent=lang==='zh'?'EN':'中文';applyLang();renderAll();}
+function showTab(n){document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['bracket','info'][i]===n));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id==='section-'+n));try{db.ref('/stats/tabs/'+n).transaction(v=>(v||0)+1);}catch(e){}}
+function $id(id){return document.getElementById(id);}
+function set(id,v,h){const e=$id(id);if(e){if(h)e.innerHTML=v;else e.textContent=v;}}
+
+function applyLang(){
+  try{
+    const d=gameData.header||{};
+    set('pub-org-bar',d.orgBar||'',true);
+    set('pub-badge',lang==='en'&&d.badgeEn?d.badgeEn:(d.badge||''));
+    set('pub-title',lang==='en'&&d.titleEn?d.titleEn:(d.title||'籃球錦標賽'),true);
+    const tEl=$id('pub-title');
+    if(tEl){tEl.style.fontSize=(d.titleSize||60)+'px';tEl.style.color=d.titleColor||'#FFE44D';}
+    set('pub-venue',d.venue||'');
+    set('pub-footer',d.footer||'🏀 籃球錦標賽 · 技術支援：主辦單位');
+    document.title=(d.title||'籃球錦標賽').replace(/<[^>]+>/g,'');
+    try{const l=$id('pub-left-img'),r=$id('pub-right-img');if(l)l.src=d.leftImgBase64||'';if(r)r.src=d.rightImgBase64||'';}catch(e){}
+    set('ct-bracket',lang==='zh'?'賽程賽果':'Results');
+    set('ct-info',lang==='zh'?'活動資訊':'Info');
+    set('ct-bk',lang==='zh'?'🏆 淘汰賽賽程圖':'🏆 Bracket',true);
+    set('ct-sch',lang==='zh'?'📋 晉級賽程':'📋 Schedule',true);
+  }catch(e){console.error(e);}
+}
+
+db.ref('/game').on('value',snap=>{
+  try{gameData=snap.val()||{};applyLang();renderAll();}catch(e){console.error(e);}
+});
+
+function renderAll(){
+  try{renderBracket(gameData.bracket);}catch(e){console.error(e);}
+  try{renderInfo(gameData.info);}catch(e){}
+  try{renderNotices(gameData.notices);}catch(e){}
+  try{renderContacts(gameData.contacts);}catch(e){}
+}
+
+function renderBracket(b){
+  const el=$id('bracket-display'),sch=$id('bracket-schedule');
+  if(!b||!b.matches||!b.matches.length){if(el)el.innerHTML='<div class="loading">尚未設定對戰資料</div>';return;}
+  const CH=54,G=10,U=CH+G,CW=151;
+  const rounds={};
+  b.matches.forEach(m=>{const r=m.round||1;if(!rounds[r])rounds[r]=[];rounds[r].push(m);});
+  const rNums=Object.keys(rounds).map(Number).sort((a,b)=>a-b);
+  const rMin=rNums[0],N1=rounds[rMin].length,TH=N1*U-G;
+  const LBL=['','十六強','八強','四強','冠軍賽','決賽'];
+  let html='<div class="bk-wrap">';
+  rNums.forEach((rn,ri)=>{
+    const rel=rn-rMin,fac=Math.pow(2,rel);
+    const ms=rounds[rn];
+    const lbl=LBL[rn]||('第'+rn+'輪');
+    html+=`<div class="bk-col"><div class="bk-round-lbl">${lbl}</div><div class="bk-col-body" style="width:${CW}px;height:${TH}px;position:relative;">`;
+    ms.forEach((m,mi)=>{
+      const sTop=mi*fac*U,sH=fac*U-G,cTop=sTop+(sH-CH)/2;
+      const aW=m.winner===0,bW=m.winner===1;
+      const aN=(m.teamA||'待定').substring(0,7),bN=(m.teamB||'待定').substring(0,7);
+      html+=`<div class="bk-match" style="top:${cTop}px;height:${CH}px;">
+        <div class="bk-team ${aW?'win':''}" style="height:${CH/2}px">${m.emojiA||''}${aN}<span class="bk-pts">${m.scoreA||''}</span></div>
+        <div class="bk-team ${bW?'win':''}" style="height:${CH/2}px">${m.emojiB||''}${bN}<span class="bk-pts">${m.scoreB||''}</span></div>
+      </div>`;
+      if(ri<rNums.length-1&&mi%2===0&&mi+1<ms.length){
+        const cy1=cTop+CH/2;
+        const ct2=((mi+1)*fac*U)+(fac*U-G-CH)/2;
+        const cy2=ct2+CH/2,midY=(cy1+cy2)/2,rx=CW-8;
+        html+=`<svg style="position:absolute;top:0;left:0;width:${CW+24}px;height:${TH}px;overflow:visible;pointer-events:none">
+          <line x1="${rx}" y1="${cy1}" x2="${rx+12}" y2="${cy1}" stroke="#FFB347" stroke-width="2" opacity="0.7"/>
+          <line x1="${rx}" y1="${cy2}" x2="${rx+12}" y2="${cy2}" stroke="#FFB347" stroke-width="2" opacity="0.7"/>
+          <line x1="${rx+12}" y1="${cy1}" x2="${rx+12}" y2="${cy2}" stroke="#FFB347" stroke-width="2" opacity="0.7"/>
+          <line x1="${rx+12}" y1="${midY}" x2="${rx+24}" y2="${midY}" stroke="#FFB347" stroke-width="2" opacity="0.7"/>
+        </svg>`;
+      }
+    });
+    html+=`</div></div>`;
+    if(ri<rNums.length-1)html+=`<div style="width:24px;flex-shrink:0"></div>`;
+  });
+  if(b.champion){
+    html+=`<div style="display:flex;align-items:center;height:${TH}px;margin-left:20px;">
+      <div class="bk-champ-box">
+        <span class="crown">👑</span>
+        <span class="lbl">CHAMPION</span>
+        <span class="name">${b.champion}</span>
+      </div>
+    </div>`;
+  }
+  html+='</div>';
+  if(el)el.innerHTML=html;
+  const games=b.schedule||[];
+  if(sch)sch.innerHTML=games.length?games.map(g=>`
+    <div class="game-row">
+      <div class="g-time">${g.when||''}<div class="g-court">${g.time||''}</div></div>
+      <div class="g-name">${g.name||''}<br><span style="font-size:11px;color:rgba(255,255,255,0.25)">${g.teams||''}</span></div>
+      <span class="g-status ${g.status==='live'?'s-live':g.status==='done'?'s-done':'s-soon'}">${g.court||''}</span>
+    </div>`).join(''):'<div class="loading">尚未設定賽程</div>';
+}
+
+function renderInfo(info){const el=$id('pub-info-list');if(!el)return;if(!info||!info.length){el.innerHTML='<div class="loading">尚未設定</div>';return;}el.innerHTML=info.map(i=>`<div class="info-row"><div class="info-ico">${i.icon||'📌'}</div><div><div class="info-lbl">${i.label||''}</div><div class="info-val">${i.value||''}</div>${i.sub?`<div class="info-note">${i.sub}</div>`:''}</div></div>`).join('');}
+function renderNotices(n){const el=$id('pub-notice-list');if(!el)return;if(!n||!n.length){el.innerHTML='<div class="loading">目前無公告</div>';return;}el.innerHTML=n.map(x=>`<div class="notice-box"><div class="notice-when">${x.time||''}</div><div class="notice-msg">${x.text||''}</div></div>`).join('');}
+function renderContacts(c){const el=$id('pub-contact-list');if(!el)return;if(!c||!c.length){el.innerHTML='<div class="loading">尚未設定</div>';return;}el.innerHTML=c.map(x=>`<div class="info-row"><div class="info-ico">${x.icon||'👤'}</div><div><div class="info-lbl">${x.label||''}</div><div class="info-val">${x.name||''}</div><div class="info-note">${x.contact||''}</div></div></div>`).join('');}
+</script>
+</body>
+</html>

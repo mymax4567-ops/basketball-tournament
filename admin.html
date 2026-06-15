@@ -151,6 +151,7 @@ body{background:var(--bg);color:var(--dark);font-family:'Noto Sans TC',sans-seri
     <div class="anav" onclick="showAdmin('info')">ℹ️ 活動</div>
     <div class="anav" onclick="showAdmin('notices')">📢 公告</div>
     <div class="anav" onclick="showAdmin('contacts')">📞 聯絡</div>
+    <div class="anav" onclick="showAdmin('groups')">📊 分組賽</div>
     <div class="anav" onclick="showAdmin('tools')">🛠 工具</div>
     <div class="anav" onclick="showAdmin('stats')">📊 統計</div>
     <div class="anav" onclick="showAdmin('archives')">📦 封存</div>
@@ -279,6 +280,61 @@ body{background:var(--bg);color:var(--dark);font-family:'Noto Sans TC',sans-seri
       <div class="section-title">📞 聯絡資訊</div>
       <div id="contacts-list"></div>
       <button class="btn btn-add" onclick="addContact()">＋ 新增聯絡人</button>
+    </div>
+
+    <!-- 📊 分組賽 -->
+    <div class="admin-section" id="asec-groups">
+      <div class="section-title">📊 分組賽管理</div>
+      <div class="hint-box">每組最多可新增 <strong>24隊</strong>。填入隊名後，比賽結果直接更新勝場、負場即可，積分自動計算（勝1場＝3分）。可設定前幾名晉級。</div>
+
+      <!-- 4個組別 -->
+      <div id="group-admin-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="switchGroupAdmin('jh_boys',this)">🏀 國中男子組</button>
+        <button class="btn" style="font-size:12px;padding:6px 14px;background:var(--bg);border:1px solid var(--border)" onclick="switchGroupAdmin('jh_girls',this)">🏀 國中女子組</button>
+        <button class="btn" style="font-size:12px;padding:6px 14px;background:var(--bg);border:1px solid var(--border)" onclick="switchGroupAdmin('sh_boys',this)">🏀 高中男子組</button>
+        <button class="btn" style="font-size:12px;padding:6px 14px;background:var(--bg);border:1px solid var(--border)" onclick="switchGroupAdmin('sh_girls',this)">🏀 高中女子組</button>
+      </div>
+
+      <div id="ga-jh_boys" class="ga-panel">
+        <div class="card">
+          <div class="card-label">🏀 國中男子組 設定</div>
+          <div class="field-row">
+            <div class="field" style="max-width:120px"><label>前幾名晉級</label><input type="number" id="adv-jh_boys" value="4" min="1" max="24" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:13px"/></div>
+          </div>
+          <div id="teams-jh_boys"></div>
+          <button class="btn btn-add" onclick="addTeam('jh_boys')">＋ 新增隊伍（最多24隊）</button>
+        </div>
+      </div>
+      <div id="ga-jh_girls" class="ga-panel" style="display:none">
+        <div class="card">
+          <div class="card-label">🏀 國中女子組 設定</div>
+          <div class="field-row">
+            <div class="field" style="max-width:120px"><label>前幾名晉級</label><input type="number" id="adv-jh_girls" value="4" min="1" max="24" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:13px"/></div>
+          </div>
+          <div id="teams-jh_girls"></div>
+          <button class="btn btn-add" onclick="addTeam('jh_girls')">＋ 新增隊伍（最多24隊）</button>
+        </div>
+      </div>
+      <div id="ga-sh_boys" class="ga-panel" style="display:none">
+        <div class="card">
+          <div class="card-label">🏀 高中男子組 設定</div>
+          <div class="field-row">
+            <div class="field" style="max-width:120px"><label>前幾名晉級</label><input type="number" id="adv-sh_boys" value="4" min="1" max="24" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:13px"/></div>
+          </div>
+          <div id="teams-sh_boys"></div>
+          <button class="btn btn-add" onclick="addTeam('sh_boys')">＋ 新增隊伍（最多24隊）</button>
+        </div>
+      </div>
+      <div id="ga-sh_girls" class="ga-panel" style="display:none">
+        <div class="card">
+          <div class="card-label">🏀 高中女子組 設定</div>
+          <div class="field-row">
+            <div class="field" style="max-width:120px"><label>前幾名晉級</label><input type="number" id="adv-sh_girls" value="4" min="1" max="24" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;width:100%;font-size:13px"/></div>
+          </div>
+          <div id="teams-sh_girls"></div>
+          <button class="btn btn-add" onclick="addTeam('sh_girls')">＋ 新增隊伍（最多24隊）</button>
+        </div>
+      </div>
     </div>
 
     <!-- 🛠 工具（重置）-->
@@ -561,7 +617,7 @@ function switchHeaderLang(l,el){}
 
 // ── NAV ──
 function showAdmin(name){
-  const names=['header','bracket','schedule','info','notices','contacts','tools','stats','archives','accounts'];
+  const names=['header','bracket','schedule','info','notices','contacts','groups','tools','stats','archives','accounts'];
   document.querySelectorAll('.anav').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
   document.querySelectorAll('.admin-section').forEach(s=>s.classList.toggle('active',s.id==='asec-'+name));
   if(name==='stats')loadStats();
@@ -758,6 +814,7 @@ function loadData(){
     scheduleData=g.bracket?.schedule||[];
     infoData=g.info||[];noticesData=g.notices||[];contactsData=g.contacts||[];
     renderScheduleList();renderInfoList();renderNoticesList();renderContactsList();
+    loadGroupsData(g.groups);
     accountsCache=d.accounts||{};renderAccountsList();
   });
 }
@@ -793,6 +850,90 @@ function buildGameData(){
 function saveAll(){
   const data=buildGameData();
   db.ref('/game').set(data).then(()=>showSaveMsg('✅ 已儲存並發布！')).catch(e=>showSaveMsg('❌ 失敗：'+e.message));
+}
+
+// ── GROUP STAGE ──
+const GROUP_KEYS_ADMIN=['jh_boys','jh_girls','sh_boys','sh_girls'];
+let groupsData={
+  jh_boys:{teams:[],advance:4},
+  jh_girls:{teams:[],advance:4},
+  sh_boys:{teams:[],advance:4},
+  sh_girls:{teams:[],advance:4}
+};
+
+function switchGroupAdmin(key,btn){
+  document.querySelectorAll('.ga-panel').forEach(p=>p.style.display='none');
+  document.getElementById('ga-'+key).style.display='block';
+  document.querySelectorAll('#group-admin-tabs .btn').forEach(b=>{
+    b.className='btn';b.style.cssText='font-size:12px;padding:6px 14px;background:var(--bg);border:1px solid var(--border)';
+  });
+  btn.className='btn btn-primary';btn.style.cssText='font-size:12px;padding:6px 14px';
+}
+
+function renderTeams(key){
+  const el=document.getElementById('teams-'+key);
+  if(!el) return;
+  const teams=groupsData[key]?.teams||[];
+  if(!teams.length){el.innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px 0">尚未新增隊伍</p>';return;}
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">
+    <thead><tr style="border-bottom:1px solid var(--border)">
+      <th style="text-align:left;padding:6px 4px;color:var(--muted);font-size:11px">隊伍名稱</th>
+      <th style="padding:6px 4px;color:var(--muted);font-size:11px">勝</th>
+      <th style="padding:6px 4px;color:var(--muted);font-size:11px">負</th>
+      <th style="padding:6px 4px;color:var(--muted);font-size:11px">得分</th>
+      <th style="padding:6px 4px;color:var(--muted);font-size:11px">積分</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${teams.map((t,i)=>`<tr style="border-bottom:1px solid #f0f0f0">
+      <td style="padding:6px 4px"><input value="${t.name||''}" oninput="groupsData['${key}'].teams[${i}].name=this.value" style="width:120px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px"/></td>
+      <td style="padding:6px 4px;text-align:center"><input type="number" min="0" value="${t.w||0}" oninput="updateTeam('${key}',${i},'w',+this.value)" style="width:50px;padding:5px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center"/></td>
+      <td style="padding:6px 4px;text-align:center"><input type="number" min="0" value="${t.l||0}" oninput="updateTeam('${key}',${i},'l',+this.value)" style="width:50px;padding:5px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center"/></td>
+      <td style="padding:6px 4px;text-align:center"><input type="number" min="0" value="${t.score||0}" oninput="updateTeam('${key}',${i},'score',+this.value)" style="width:60px;padding:5px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center"/></td>
+      <td style="padding:6px 4px;text-align:center;font-weight:700;color:var(--orange)">${(t.w||0)*3}</td>
+      <td style="padding:6px 4px;text-align:center"><button onclick="removeTeam('${key}',${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px">✕</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function updateTeam(key,i,field,val){
+  if(!groupsData[key]?.teams[i]) return;
+  groupsData[key].teams[i][field]=val;
+  groupsData[key].teams[i].pts=(groupsData[key].teams[i].w||0)*3;
+}
+function addTeam(key){
+  if(!groupsData[key]) groupsData[key]={teams:[],advance:4};
+  if((groupsData[key].teams||[]).length>=24){alert('每組最多24隊！');return;}
+  groupsData[key].teams.push({name:'',w:0,l:0,pts:0,score:0});
+  renderTeams(key);
+}
+function removeTeam(key,i){
+  groupsData[key].teams.splice(i,1);
+  renderTeams(key);
+}
+
+function loadGroupsData(g){
+  if(!g) return;
+  GROUP_KEYS_ADMIN.forEach(key=>{
+    if(g[key]){
+      groupsData[key]=g[key];
+      if(!groupsData[key].teams) groupsData[key].teams=[];
+      const advEl=document.getElementById('adv-'+key);
+      if(advEl) advEl.value=g[key].advance||4;
+      renderTeams(key);
+    }
+  });
+}
+
+function buildGroupsData(){
+  const result={};
+  GROUP_KEYS_ADMIN.forEach(key=>{
+    const advEl=document.getElementById('adv-'+key);
+    const adv=advEl?parseInt(advEl.value)||4:4;
+    // Recalculate pts
+    const teams=(groupsData[key]?.teams||[]).map(t=>({...t,pts:(t.w||0)*3}));
+    result[key]={teams,advance:adv};
+  });
+  return result;
 }
 
 function showSaveMsg(msg){

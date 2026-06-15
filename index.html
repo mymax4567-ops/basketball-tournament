@@ -239,6 +239,48 @@ body{background:#13132a;font-family:'Noto Sans TC',sans-serif;}
 .loading{text-align:center;padding:40px;color:rgba(255,255,255,0.2);font-size:13px;}
 footer{text-align:center;padding:16px;color:rgba(255,255,255,0.2);font-size:10px;border-top:1px solid rgba(255,255,255,0.05);letter-spacing:1px;}
 
+/* ── GROUP STAGE ── */
+.group-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.group-tab{
+  padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;
+  cursor:pointer;border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.5);background:transparent;transition:all 0.2s;
+}
+.group-tab.active{background:#FFD700;color:#111;border-color:#FFD700;}
+.group-panel{display:none;}
+.group-panel.active{display:block;}
+.group-label{
+  font-size:14px;font-weight:900;color:#FFD700;
+  margin-bottom:12px;letter-spacing:1px;
+}
+.standings-table{width:100%;border-collapse:collapse;font-size:12px;}
+.standings-table th{
+  padding:8px 6px;color:rgba(255,255,255,0.4);
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  border-bottom:1px solid rgba(255,255,255,0.08);text-align:center;
+}
+.standings-table th:first-child{text-align:left;}
+.standings-table td{
+  padding:9px 6px;border-bottom:1px solid rgba(255,255,255,0.05);
+  text-align:center;font-weight:700;color:#ddd;
+}
+.standings-table td:first-child{text-align:left;}
+.standings-table tr:last-child td{border-bottom:none;}
+.rank-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  font-size:11px;font-weight:900;margin-right:4px;
+}
+.rank-1{background:#FFD700;color:#000;}
+.rank-2{background:#C0C0C0;color:#000;}
+.rank-3{background:#CD7F32;color:#fff;}
+.rank-other{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);}
+.adv-tag{
+  display:inline-block;background:rgba(0,200,150,0.15);
+  color:#00C896;font-size:9px;padding:1px 5px;
+  border-radius:4px;margin-left:3px;font-weight:700;
+}
+
 /* Mobile */
 @media(max-width:640px){
   .banner-body,.b-left,.b-right{flex-direction:column;}
@@ -297,7 +339,10 @@ footer{text-align:center;padding:16px;color:rgba(255,255,255,0.2);font-size:10px
 <!-- ══ TABS ══ -->
 <nav class="tabs">
   <div class="tab active" onclick="showTab('bracket')">
-    <span class="tab-icon">🏆</span><span id="ct-bracket">賽程賽果</span>
+    <span class="tab-icon">🏆</span><span id="ct-bracket">晉級賽</span>
+  </div>
+  <div class="tab" onclick="showTab('groups')">
+    <span class="tab-icon">📊</span><span id="ct-groups">分組賽</span>
   </div>
   <div class="tab" onclick="showTab('info')">
     <span class="tab-icon">📋</span><span id="ct-info">活動資訊</span>
@@ -319,6 +364,37 @@ footer{text-align:center;padding:16px;color:rgba(255,255,255,0.2);font-size:10px
     <div class="card">
       <div class="card-title" id="ct-sch">📋 晉級賽程</div>
       <div id="bracket-schedule"><div class="loading">載入中...</div></div>
+    </div>
+  </div>
+
+  <!-- 分組賽 -->
+  <div class="section" id="section-groups">
+    <div class="card">
+      <div class="card-title">📊 分組賽積分榜</div>
+      <!-- 組別切換 -->
+      <div class="group-tabs">
+        <button class="group-tab active" onclick="showGroup('jh_boys',this)">🏀 國中男子組</button>
+        <button class="group-tab" onclick="showGroup('jh_girls',this)">🏀 國中女子組</button>
+        <button class="group-tab" onclick="showGroup('sh_boys',this)">🏀 高中男子組</button>
+        <button class="group-tab" onclick="showGroup('sh_girls',this)">🏀 高中女子組</button>
+      </div>
+      <!-- 各組積分表 -->
+      <div id="group-jh_boys" class="group-panel active">
+        <div class="group-label">🏀 國中男子組</div>
+        <div id="gt-jh_boys"><div class="loading">載入中...</div></div>
+      </div>
+      <div id="group-jh_girls" class="group-panel">
+        <div class="group-label">🏀 國中女子組</div>
+        <div id="gt-jh_girls"><div class="loading">載入中...</div></div>
+      </div>
+      <div id="group-sh_boys" class="group-panel">
+        <div class="group-label">🏀 高中男子組</div>
+        <div id="gt-sh_boys"><div class="loading">載入中...</div></div>
+      </div>
+      <div id="group-sh_girls" class="group-panel">
+        <div class="group-label">🏀 高中女子組</div>
+        <div id="gt-sh_girls"><div class="loading">載入中...</div></div>
+      </div>
     </div>
   </div>
 
@@ -350,7 +426,17 @@ let lang='zh',gameData={};
 try{db.ref('/stats/visits').transaction(v=>(v||0)+1);}catch(e){}
 
 function toggleLang(){lang=lang==='zh'?'en':'zh';document.getElementById('lang-toggle').textContent=lang==='zh'?'EN':'中文';applyLang();renderAll();}
-function showTab(n){document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['bracket','info'][i]===n));document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id==='section-'+n));try{db.ref('/stats/tabs/'+n).transaction(v=>(v||0)+1);}catch(e){}}
+function showTab(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['bracket','groups','info'][i]===n));
+  document.querySelectorAll('.section').forEach(s=>s.classList.toggle('active',s.id==='section-'+n));
+  try{db.ref('/stats/tabs/'+n).transaction(v=>(v||0)+1);}catch(e){}
+}
+function showGroup(key,btn){
+  document.querySelectorAll('.group-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.group-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('group-'+key).classList.add('active');
+}
 function $id(id){return document.getElementById(id);}
 function set(id,v,h){const e=$id(id);if(e){if(h)e.innerHTML=v;else e.textContent=v;}}
 
@@ -366,7 +452,8 @@ function applyLang(){
     set('pub-footer',d.footer||'🏀 籃球錦標賽 · 技術支援：主辦單位');
     document.title=(d.title||'籃球錦標賽').replace(/<[^>]+>/g,'');
     try{const l=$id('pub-left-img'),r=$id('pub-right-img');if(l)l.src=d.leftImgBase64||'';if(r)r.src=d.rightImgBase64||'';}catch(e){}
-    set('ct-bracket',lang==='zh'?'賽程賽果':'Results');
+    set('ct-bracket',lang==='zh'?'晉級賽':'Bracket');
+    set('ct-groups',lang==='zh'?'分組賽':'Groups');
     set('ct-info',lang==='zh'?'活動資訊':'Info');
     set('ct-bk',lang==='zh'?'🏆 淘汰賽賽程圖':'🏆 Bracket',true);
     set('ct-sch',lang==='zh'?'📋 晉級賽程':'📋 Schedule',true);
@@ -379,9 +466,42 @@ db.ref('/game').on('value',snap=>{
 
 function renderAll(){
   try{renderBracket(gameData.bracket);}catch(e){console.error(e);}
+  try{renderGroups(gameData.groups);}catch(e){console.error(e);}
   try{renderInfo(gameData.info);}catch(e){}
   try{renderNotices(gameData.notices);}catch(e){}
   try{renderContacts(gameData.contacts);}catch(e){}
+}
+
+const GROUP_KEYS=['jh_boys','jh_girls','sh_boys','sh_girls'];
+function renderGroups(groups){
+  if(!groups) return;
+  GROUP_KEYS.forEach(key=>{
+    const el=document.getElementById('gt-'+key);
+    if(!el) return;
+    const g=groups[key];
+    if(!g||!g.teams||!g.teams.length){
+      el.innerHTML='<div class="loading">尚未設定隊伍</div>';return;
+    }
+    const sorted=[...g.teams].sort((a,b)=>(b.pts||0)-(a.pts||0));
+    el.innerHTML=`<table class="standings-table">
+      <thead><tr>
+        <th>隊伍</th><th>場</th><th>勝</th><th>負</th><th>積分</th><th>得分</th>
+      </tr></thead>
+      <tbody>${sorted.map((t,i)=>{
+        const rank=i+1;
+        const badge=rank<=3?`rank-${rank}`:'rank-other';
+        const adv=rank<=g.advance?'<span class="adv-tag">晉級</span>':'';
+        return`<tr>
+          <td><span class="rank-badge ${badge}">${rank}</span>${t.name||''}${adv}</td>
+          <td>${(t.w||0)+(t.l||0)}</td>
+          <td style="color:#00C896">${t.w||0}</td>
+          <td style="color:#FF4466">${t.l||0}</td>
+          <td style="color:#FFD700;font-size:14px">${t.pts||0}</td>
+          <td style="color:rgba(255,255,255,0.5)">${t.score||0}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  });
 }
 
 function renderBracket(b){

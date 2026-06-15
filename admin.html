@@ -151,8 +151,7 @@ body{background:var(--bg);color:var(--dark);font-family:'Noto Sans TC',sans-seri
     <div class="anav" onclick="showAdmin('info')">ℹ️ 活動</div>
     <div class="anav" onclick="showAdmin('notices')">📢 公告</div>
     <div class="anav" onclick="showAdmin('contacts')">📞 聯絡</div>
-    <div class="anav" onclick="showAdmin('groups')">📊 分組賽</div>
-    <div class="anav" onclick="showAdmin('tools')">🛠 工具</div>
+<div class="anav" onclick="showAdmin('tools')">🛠 工具</div>
     <div class="anav" onclick="showAdmin('stats')">📊 統計</div>
     <div class="anav" onclick="showAdmin('archives')">📦 封存</div>
     <div class="anav" onclick="showAdmin('accounts')">👥 帳號</div>
@@ -242,15 +241,60 @@ body{background:var(--bg);color:var(--dark);font-family:'Noto Sans TC',sans-seri
     </div>
 
 
-    <!-- 晉級賽 -->
+    <!-- 晉級賽 - 4個組別 -->
     <div class="admin-section" id="asec-bracket">
-      <div class="section-title">🏆 晉級賽對戰</div>
-      <div class="hint-box">可以自由新增場次，例如：八強賽、四強賽、準決賽、決賽，不限數量。</div>
-      <div id="matches-list"></div>
-      <button class="btn btn-add" onclick="addMatch()">＋ 新增對戰場次</button>
-      <div class="card" style="margin-top:16px">
-        <div class="card-label">👑 冠軍</div>
-        <div class="field"><label>冠軍隊名（活動結束後填入）</label><input id="champ" placeholder="火焰隊"/></div>
+      <div class="section-title">🏆 晉級賽管理</div>
+      <div class="hint-box">
+        <strong>四個組別各自獨立</strong>，每組各有自己的對戰圖。<br>
+        新增場次時選擇「所在輪次」：1=十六強 / 2=十二強 / 3=八強 / 4=四強 / 5=冠軍賽
+      </div>
+
+      <!-- 組別切換 -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px" id="cat-admin-btns">
+        <button class="btn btn-primary" style="font-size:12px;padding:7px 16px" onclick="switchCatAdmin('jh_boys',this)">🏀 國中男子組</button>
+        <button class="btn" style="font-size:12px;padding:7px 16px;background:var(--bg);border:1px solid var(--border)" onclick="switchCatAdmin('jh_girls',this)">🏀 國中女子組</button>
+        <button class="btn" style="font-size:12px;padding:7px 16px;background:var(--bg);border:1px solid var(--border)" onclick="switchCatAdmin('sh_boys',this)">🏀 高中男子組</button>
+        <button class="btn" style="font-size:12px;padding:7px 16px;background:var(--bg);border:1px solid var(--border)" onclick="switchCatAdmin('sh_girls',this)">🏀 高中女子組</button>
+      </div>
+
+      <!-- 國中男子組 -->
+      <div id="ca-jh_boys" class="ca-panel">
+        <div class="card" style="background:rgba(255,107,0,0.04);border-color:rgba(255,107,0,0.15)">
+          <div class="card-label" style="color:var(--orange)">🏀 國中男子組 — 冠軍</div>
+          <div class="field"><label>冠軍隊名</label><input id="champ-jh_boys" placeholder="填入冠軍隊名"/></div>
+        </div>
+        <div id="matches-jh_boys"></div>
+        <button class="btn btn-add" onclick="addCatMatch('jh_boys')">＋ 新增場次</button>
+      </div>
+
+      <!-- 國中女子組 -->
+      <div id="ca-jh_girls" class="ca-panel" style="display:none">
+        <div class="card" style="background:rgba(255,107,0,0.04);border-color:rgba(255,107,0,0.15)">
+          <div class="card-label" style="color:var(--orange)">🏀 國中女子組 — 冠軍</div>
+          <div class="field"><label>冠軍隊名</label><input id="champ-jh_girls" placeholder="填入冠軍隊名"/></div>
+        </div>
+        <div id="matches-jh_girls"></div>
+        <button class="btn btn-add" onclick="addCatMatch('jh_girls')">＋ 新增場次</button>
+      </div>
+
+      <!-- 高中男子組 -->
+      <div id="ca-sh_boys" class="ca-panel" style="display:none">
+        <div class="card" style="background:rgba(255,107,0,0.04);border-color:rgba(255,107,0,0.15)">
+          <div class="card-label" style="color:var(--orange)">🏀 高中男子組 — 冠軍</div>
+          <div class="field"><label>冠軍隊名</label><input id="champ-sh_boys" placeholder="填入冠軍隊名"/></div>
+        </div>
+        <div id="matches-sh_boys"></div>
+        <button class="btn btn-add" onclick="addCatMatch('sh_boys')">＋ 新增場次</button>
+      </div>
+
+      <!-- 高中女子組 -->
+      <div id="ca-sh_girls" class="ca-panel" style="display:none">
+        <div class="card" style="background:rgba(255,107,0,0.04);border-color:rgba(255,107,0,0.15)">
+          <div class="card-label" style="color:var(--orange)">🏀 高中女子組 — 冠軍</div>
+          <div class="field"><label>冠軍隊名</label><input id="champ-sh_girls" placeholder="填入冠軍隊名"/></div>
+        </div>
+        <div id="matches-sh_girls"></div>
+        <button class="btn btn-add" onclick="addCatMatch('sh_girls')">＋ 新增場次</button>
       </div>
     </div>
 
@@ -617,7 +661,7 @@ function switchHeaderLang(l,el){}
 
 // ── NAV ──
 function showAdmin(name){
-  const names=['header','bracket','schedule','info','notices','contacts','groups','tools','stats','archives','accounts'];
+  const names=['header','bracket','schedule','info','notices','contacts','tools','stats','archives','accounts'];
   document.querySelectorAll('.anav').forEach((t,i)=>t.classList.toggle('active',names[i]===name));
   document.querySelectorAll('.admin-section').forEach(s=>s.classList.toggle('active',s.id==='asec-'+name));
   if(name==='stats')loadStats();
@@ -626,7 +670,65 @@ function showAdmin(name){
 }
 
 // ── WINNER ──
-// setWinner replaced by setMatchWinner
+// ── CATEGORY BRACKET MANAGEMENT ──
+const CAT_KEYS_ADMIN=['jh_boys','jh_girls','sh_boys','sh_girls'];
+const ROUND_NAMES_ADMIN={1:'十六強',2:'十二強',3:'八強',4:'四強',5:'冠軍賽'};
+let catMatchesData={jh_boys:[],jh_girls:[],sh_boys:[],sh_girls:[]};
+
+function switchCatAdmin(key,btn){
+  document.querySelectorAll('.ca-panel').forEach(p=>p.style.display='none');
+  document.getElementById('ca-'+key).style.display='block';
+  document.querySelectorAll('#cat-admin-btns .btn').forEach(b=>{
+    b.className='btn';b.style.cssText='font-size:12px;padding:7px 16px;background:var(--bg);border:1px solid var(--border)';
+  });
+  btn.className='btn btn-primary';btn.style.cssText='font-size:12px;padding:7px 16px';
+}
+
+function renderCatMatches(key){
+  const el=document.getElementById('matches-'+key);
+  if(!el) return;
+  const matches=catMatchesData[key]||[];
+  if(!matches.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">尚未新增場次</div>';return;}
+  el.innerHTML=matches.map((m,i)=>`
+    <div class="list-item">
+      <button class="remove-btn" onclick="removeCatMatch('${key}',${i})">✕</button>
+      <div class="field-row">
+        <div class="field"><label>場次名稱</label>
+          <input value="${m.name||''}" oninput="catMatchesData['${key}'][${i}].name=this.value" placeholder="例如：十六強第1場"/>
+        </div>
+        <div class="field" style="max-width:130px">
+          <label>🎯 輪次</label>
+          <select onchange="catMatchesData['${key}'][${i}].round=parseInt(this.value)" style="padding:9px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;width:100%;font-family:inherit;background:#fff">
+            ${[1,2,3,4,5].map(r=>`<option value="${r}" ${(m.round||1)===r?'selected':''}>${r} — ${ROUND_NAMES_ADMIN[r]}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="team-grid">
+        <div class="field"><label>隊伍A</label><input value="${m.teamA||''}" oninput="catMatchesData['${key}'][${i}].teamA=this.value" placeholder="隊伍名稱"/></div>
+        <div class="field"><label>Emoji A</label><input value="${m.emojiA||''}" oninput="catMatchesData['${key}'][${i}].emojiA=this.value" placeholder="🔥"/></div>
+        <div class="field"><label>隊伍B</label><input value="${m.teamB||''}" oninput="catMatchesData['${key}'][${i}].teamB=this.value" placeholder="隊伍名稱"/></div>
+        <div class="field"><label>Emoji B</label><input value="${m.emojiB||''}" oninput="catMatchesData['${key}'][${i}].emojiB=this.value" placeholder="⚡"/></div>
+      </div>
+      <div class="score-row">
+        <div class="field" style="flex:1"><label>分數A</label><input value="${m.scoreA||''}" oninput="catMatchesData['${key}'][${i}].scoreA=this.value"/></div>
+        <span>vs</span>
+        <div class="field" style="flex:1"><label>分數B</label><input value="${m.scoreB||''}" oninput="catMatchesData['${key}'][${i}].scoreB=this.value"/></div>
+      </div>
+      <label style="font-size:12px;color:var(--muted);font-weight:700">勝者</label>
+      <div class="winner-select">
+        <button class="winner-btn ${m.winner===0?'active':''}" onclick="setCatWinner('${key}',${i},0)">隊伍A 勝</button>
+        <button class="winner-btn ${m.winner===1?'active':''}" onclick="setCatWinner('${key}',${i},1)">隊伍B 勝</button>
+        <button class="winner-btn ${m.winner===-1||m.winner===undefined?'active':''}" onclick="setCatWinner('${key}',${i},-1)">未定</button>
+      </div>
+    </div>`).join('');
+}
+function addCatMatch(key){
+  if(!catMatchesData[key]) catMatchesData[key]=[];
+  catMatchesData[key].push({name:'',round:1,teamA:'',emojiA:'',teamB:'',emojiB:'',scoreA:'',scoreB:'',winner:-1});
+  renderCatMatches(key);
+}
+function removeCatMatch(key,i){catMatchesData[key].splice(i,1);renderCatMatches(key);}
+function setCatWinner(key,i,w){catMatchesData[key][i].winner=w;renderCatMatches(key);}
 
 // ── LISTS ──
 let scheduleData=[],infoData=[],noticesData=[],contactsData=[];
@@ -806,10 +908,16 @@ function loadData(){
       if(h.leftImgBase64){leftImgBase64=h.leftImgBase64;const p=document.getElementById('left-img-preview');p.src=leftImgBase64;p.style.display='block';}
       if(h.rightImgBase64){rightImgBase64=h.rightImgBase64;const p=document.getElementById('right-img-preview');p.src=rightImgBase64;p.style.display='block';}
     }
-    if(g.bracket){
-      matchesData=g.bracket.matches||[];
-      document.getElementById('champ').value=g.bracket.champion||'';
-      renderMatchesList();
+    // Load categories bracket data
+    if(g.categories){
+      CAT_KEYS_ADMIN.forEach(key=>{
+        if(g.categories[key]){
+          catMatchesData[key]=g.categories[key].matches||[];
+          const champEl=document.getElementById('champ-'+key);
+          if(champEl) champEl.value=g.categories[key].champion||'';
+          renderCatMatches(key);
+        }
+      });
     }
     scheduleData=g.bracket?.schedule||[];
     infoData=g.info||[];noticesData=g.notices||[];contactsData=g.contacts||[];
@@ -837,11 +945,17 @@ function buildGameData(){
       leftImgBase64:leftImgBase64||'',
       rightImgBase64:rightImgBase64||''
     },
-    bracket:{
-      matches:matchesData,
-      champion:document.getElementById('champ').value,
-      schedule:scheduleData
-    },
+    categories:(()=>{
+      const cats={};
+      CAT_KEYS_ADMIN.forEach(key=>{
+        const champEl=document.getElementById('champ-'+key);
+        cats[key]={
+          matches:catMatchesData[key]||[],
+          champion:champEl?champEl.value:''
+        };
+      });
+      return cats;
+    })(),
     info:infoData,notices:noticesData,contacts:contactsData
   };
 }
